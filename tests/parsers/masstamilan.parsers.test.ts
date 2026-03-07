@@ -1,8 +1,8 @@
-﻿const {
+import {
   parseMovieListHtml,
   parseAlbumPageHtml,
   parseAutocompleteJson,
-} = require('../../src/parsers/masstamilan.parsers');
+} from '../../src/parsers/masstamilan.parsers.js';
 
 describe('masstamilan parsers', () => {
   test('parseMovieListHtml extracts album links', () => {
@@ -14,7 +14,7 @@ describe('masstamilan parsers', () => {
 
     const movies = parseMovieListHtml(html, 'https://www.masstamilan.dev');
     expect(movies).toHaveLength(2);
-    expect(movies[0].slug).toBe('youth-2026-songs');
+    expect(movies[0]!.slug).toBe('youth-2026-songs');
   });
 
   test('parseAlbumPageHtml returns song links and zip links', () => {
@@ -30,7 +30,7 @@ describe('masstamilan parsers', () => {
     const album = parseAlbumPageHtml(html, 'youth-2026-songs', 'https://www.masstamilan.dev');
     expect(album.title).toBe('Youth');
     expect(album.songs).toHaveLength(1);
-    expect(album.songs[0].download128Path).toContain('/downloader');
+    expect(album.songs[0]!.download128Path).toContain('/downloader');
     expect(album.zip128Path).toContain('/zip128/5990');
   });
 
@@ -39,6 +39,6 @@ describe('masstamilan parsers', () => {
       [{ n: 'Youth', s: 'Tamil', l: 'youth-2026-songs' }],
       'https://www.masstamilan.dev',
     );
-    expect(items[0].slug).toBe('youth-2026-songs');
+    expect(items[0]!.slug).toBe('youth-2026-songs');
   });
 });

@@ -1,17 +1,25 @@
 /** @type {import('ts-jest').JestConfigWithTsJest} */
 module.exports = {
   testEnvironment: 'node',
-  extensionsToTreatAsEsm: ['.ts'],
   transform: {
     '^.+\\.ts$': [
       'ts-jest',
       {
-        useESM: true,
+        useESM: false,
         tsconfig: {
-          // Override strict settings for tests
+          rootDir: './',
+          module: 'commonjs',
+          moduleResolution: 'node',
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
           noUnusedLocals: false,
           noUnusedParameters: false,
+          exactOptionalPropertyTypes: false,
+          noUncheckedIndexedAccess: false,
           verbatimModuleSyntax: false,
+          declaration: false,
+          declarationMap: false,
+          sourceMap: false,
         },
       },
     ],
