@@ -239,7 +239,7 @@ function parseAutocompleteJson(data, baseUrl) {
   }));
 }
 
-module.exports = {
+export {
   parseMovieListHtml,
   parseAlbumPageHtml,
   parseSongPageHtml,

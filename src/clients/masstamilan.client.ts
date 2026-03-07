@@ -177,4 +177,4 @@ class MasstamilanClient {
   }
 }
 
-module.exports = { MasstamilanClient };
+export { MasstamilanClient };
