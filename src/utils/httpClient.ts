@@ -1,7 +1,8 @@
-﻿const axios = require('axios');
-const { env } = require('../config/env');
+import axios from 'axios';
+import type { AxiosInstance } from 'axios';
+import { env } from '../config/env.js';
 
-const httpClient = axios.create({
+export const httpClient: AxiosInstance = axios.create({
   baseURL: env.baseUrl,
   timeout: env.requestTimeoutMs,
   headers: {
@@ -18,5 +19,3 @@ const httpClient = axios.create({
     'Upgrade-Insecure-Requests': '1',
   },
 });
-
-module.exports = { httpClient };

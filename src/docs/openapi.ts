@@ -1,6 +1,7 @@
-const { env } = require('../config/env');
+import { env } from '../config/env.js';
+import type { OpenAPIV3 } from 'openapi-types';
 
-const openApiSpec = {
+export const openApiSpec: OpenAPIV3.Document = {
   openapi: '3.0.3',
   info: {
     title: 'MassTamilan Express API (Unofficial)',
@@ -441,7 +442,7 @@ const openApiSpec = {
                     items: { $ref: '#/components/schemas/SongItem' },
                   },
                   currentSong: {
-                    oneOf: [{ $ref: '#/components/schemas/SongItem' }, { type: 'null' }],
+                    oneOf: [{ $ref: '#/components/schemas/SongItem' }, { type: 'string', nullable: true }],
                   },
                   zip128Path: { type: 'string', nullable: true },
                   zip320Path: { type: 'string', nullable: true },
@@ -503,5 +504,3 @@ const openApiSpec = {
     },
   },
 };
-
-module.exports = { openApiSpec };

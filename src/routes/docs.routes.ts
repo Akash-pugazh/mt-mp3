@@ -1,6 +1,6 @@
-const { Router } = require('express');
-const swaggerUi = require('swagger-ui-express');
-const { openApiSpec } = require('../docs/openapi');
+import { Router } from 'express';
+import swaggerUi from 'swagger-ui-express';
+import { openApiSpec } from '../docs/openapi.js';
 
 const router = Router();
 
@@ -17,4 +17,4 @@ router.use(
   }),
 );
 
-module.exports = router;
+export default router;

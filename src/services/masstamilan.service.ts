@@ -1,4 +1,4 @@
-﻿import NodeCache from 'node-cache';
+import NodeCache from 'node-cache';
 import { env } from '../config/env.js';
 import { AppError } from '../errors/AppError.js';
 import { MasstamilanClient } from '../clients/masstamilan.client.js';
@@ -8,25 +8,28 @@ import {
   parseSongPageHtml,
   parseAutocompleteJson,
 } from '../parsers/masstamilan.parsers.js';
-import type { MovieListData, SongsData, MovieItem, SongItem } from '../../mobile-app/src/types/api.js';
-
-function isMovieListData(obj: any): obj is MovieListData {
-  return obj && typeof obj === 'object' &&
-    typeof obj.source === 'string' &&
-    typeof obj.page === 'number' &&
-    typeof obj.count === 'number' &&
-    Array.isArray(obj.items);
-}
+import type {
+  MovieListData,
+  SongsData,
+  AlbumData,
+  SongPageData,
+  AutocompleteItem,
+  ResolveDownloadResult,
+  MovieListQuery,
+  MovieItem,
+  ListPathResult,
+} from '../types/api.types.js';
 
 export class MasstamilanService {
-  client: MasstamilanClient;
-  cache: NodeCache;
+  private readonly client: MasstamilanClient;
+  private readonly cache: NodeCache;
+
   constructor() {
     this.client = new MasstamilanClient();
     this.cache = new NodeCache({ stdTTL: 120, checkperiod: 150, useClones: false });
   }
 
-  buildListPath(query: { source: string; page: number; letter?: string; year?: string; music?: string; keyword?: string }) {
+  buildListPath(query: MovieListQuery): ListPathResult {
     const { source, page, letter, year, music, keyword } = query;
 
     switch (source) {
@@ -47,28 +50,28 @@ export class MasstamilanService {
     }
   }
 
-  async listMovies(query: { source: string; page: number; letter?: string; year?: string; music?: string; keyword?: string }): Promise<MovieListData> {
+  async listMovies(query: MovieListQuery): Promise<MovieListData> {
     const { path, params } = this.buildListPath(query);
-    const cacheKey = `list:${path}:${JSON.stringify(params || {})}`;
-    const cached = this.cache.get(cacheKey);
+    const cacheKey = `list:${path}:${JSON.stringify(params)}`;
+    const cached = this.cache.get<MovieListData>(cacheKey);
     if (cached) return cached;
 
     const html = await this.client.fetchHtml(path, params);
-    const movies = parseMovieListHtml(html, env.baseUrl);
+    const movies: MovieItem[] = parseMovieListHtml(html, env.baseUrl);
     const result: MovieListData = {
       source: query.source,
       page: query.page,
       count: movies.length,
-      items: movies as MovieItem[],
+      items: movies,
     };
 
     this.cache.set(cacheKey, result);
     return result;
   }
 
-  async getAlbumBySlug(slug: string): Promise<any> {
+  async getAlbumBySlug(slug: string): Promise<AlbumData> {
     const cacheKey = `album:${slug}`;
-    const cached = this.cache.get(cacheKey);
+    const cached = this.cache.get<AlbumData>(cacheKey);
     if (cached) return cached;
 
     const html = await this.client.fetchHtml(`/${slug}`);
@@ -88,10 +91,10 @@ export class MasstamilanService {
     };
   }
 
-  async getSongDetails(movieId: string, songSlug: string): Promise<any> {
+  async getSongDetails(movieId: string, songSlug: string): Promise<SongPageData> {
     const path = `/${movieId}/${songSlug}-mp3-song`;
     const cacheKey = `song:${path}`;
-    const cached = this.cache.get(cacheKey);
+    const cached = this.cache.get<SongPageData>(cacheKey);
     if (cached) return cached;
 
     const html = await this.client.fetchHtml(path);
@@ -100,15 +103,12 @@ export class MasstamilanService {
     return songPage;
   }
 
-  async autocomplete(keyword: string): Promise<any[]> {
+  async autocomplete(keyword: string): Promise<AutocompleteItem[]> {
     const data = await this.client.fetchJson('/search/ac', { keyword });
-    // TODO: Define a type for autocomplete results
-    return parseAutocompleteJson(data, env.baseUrl) as any[];
+    return parseAutocompleteJson(data, env.baseUrl);
   }
 
-  async resolveDownload(pathOrUrl: string): Promise<any> {
+  async resolveDownload(pathOrUrl: string): Promise<ResolveDownloadResult> {
     return this.client.resolveDownloadPath(pathOrUrl);
   }
 }
-
-

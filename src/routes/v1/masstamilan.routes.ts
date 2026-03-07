@@ -1,14 +1,14 @@
-﻿const { Router } = require('express');
-const { asyncHandler } = require('../../utils/asyncHandler');
-const { validate } = require('../../middlewares/validate');
-const { MasstamilanController } = require('../../controllers/masstamilan.controller');
-const {
+import { Router } from 'express';
+import { asyncHandler } from '../../utils/asyncHandler.js';
+import { validate } from '../../middlewares/validate.js';
+import { MasstamilanController } from '../../controllers/masstamilan.controller.js';
+import {
   movieListQuerySchema,
   slugParamSchema,
   songParamSchema,
   autocompleteQuerySchema,
   resolveDownloadQuerySchema,
-} = require('../../validators/masstamilan.validators');
+} from '../../validators/masstamilan.validators.js';
 
 const router = Router();
 const controller = new MasstamilanController();
@@ -32,4 +32,4 @@ router.get(
   asyncHandler(controller.resolveDownload),
 );
 
-module.exports = router;
+export default router;

@@ -1,13 +1,14 @@
-﻿const { promisify } = require('util');
-const { execFile } = require('child_process');
-const { httpClient } = require('../utils/httpClient');
-const { AppError } = require('../errors/AppError');
-const { env } = require('../config/env');
+import { promisify } from 'node:util';
+import { execFile } from 'node:child_process';
+import { httpClient } from '../utils/httpClient.js';
+import { AppError } from '../errors/AppError.js';
+import { env } from '../config/env.js';
+import type { ResolveDownloadResult } from '../types/api.types.js';
 
 const execFileAsync = promisify(execFile);
 
-class MasstamilanClient {
-  buildUrl(path, query = undefined) {
+export class MasstamilanClient {
+  buildUrl(path: string, query?: Record<string, string | number | undefined>): string {
     const pathname = path.startsWith('/') ? path : `/${path}`;
     const url = new URL(pathname, `${env.baseUrl}/`);
 
@@ -22,13 +23,13 @@ class MasstamilanClient {
     return url.toString();
   }
 
-  isCloudflareChallenge(payload) {
+  isCloudflareChallenge(payload: unknown): boolean {
     if (typeof payload !== 'string') return false;
     const probe = payload.toLowerCase();
     return probe.includes('just a moment') || probe.includes('__cf_chl_opt');
   }
 
-  async fetchViaCurl(url, accept = 'text/html') {
+  async fetchViaCurl(url: string, accept: string = 'text/html'): Promise<string> {
     const args = [
       '-L',
       url,
@@ -46,7 +47,7 @@ class MasstamilanClient {
     ];
 
     const commands = process.platform === 'win32' ? ['curl.exe', 'curl'] : ['curl'];
-    let lastError = null;
+    let lastError: Error | null = null;
 
     for (const cmd of commands) {
       try {
@@ -55,16 +56,16 @@ class MasstamilanClient {
         });
         return stdout;
       } catch (error) {
-        lastError = error;
+        lastError = error as Error;
       }
     }
 
-    throw lastError || new Error('curl execution failed');
+    throw lastError ?? new Error('curl execution failed');
   }
 
-  async fetchHtml(path, query = undefined) {
+  async fetchHtml(path: string, query?: Record<string, string | number | undefined>): Promise<string> {
     try {
-      const response = await httpClient.get(path, {
+      const response = await httpClient.get<string>(path, {
         params: query,
         responseType: 'text',
       });
@@ -82,7 +83,10 @@ class MasstamilanClient {
 
       return response.data;
     } catch (error) {
-      const status = error.response?.status;
+      if (error instanceof AppError) throw error;
+
+      const axiosError = error as { response?: { status?: number }; message?: string };
+      const status = axiosError.response?.status;
 
       if (status === 403 || status === 503) {
         try {
@@ -95,23 +99,24 @@ class MasstamilanClient {
 
           return html;
         } catch (curlError) {
+          if (curlError instanceof AppError) throw curlError;
           throw new AppError('Failed to fetch HTML from source', 502, {
             path,
-            message: curlError.message,
-            status,
+            message: (curlError as Error).message,
+            status: status ?? 0,
           });
         }
       }
 
       throw new AppError('Failed to fetch HTML from source', 502, {
         path,
-        message: error.message,
-        status,
+        message: (error as Error).message,
+        status: status ?? 0,
       });
     }
   }
 
-  async fetchJson(path, query = undefined) {
+  async fetchJson(path: string, query?: Record<string, string | number | undefined>): Promise<unknown> {
     try {
       const response = await httpClient.get(path, {
         params: query,
@@ -122,59 +127,59 @@ class MasstamilanClient {
       });
       return response.data;
     } catch (error) {
-      const status = error.response?.status;
+      const axiosError = error as { response?: { status?: number }; message?: string };
+      const status = axiosError.response?.status;
 
       if (status === 403 || status === 503) {
         try {
           const url = this.buildUrl(path, query);
           const body = await this.fetchViaCurl(url, 'application/json, text/plain, */*');
-          return JSON.parse(body);
+          return JSON.parse(body) as unknown;
         } catch (curlError) {
           throw new AppError('Failed to fetch JSON from source', 502, {
             path,
-            message: curlError.message,
-            status,
+            message: (curlError as Error).message,
+            status: status ?? 0,
           });
         }
       }
 
       throw new AppError('Failed to fetch JSON from source', 502, {
         path,
-        message: error.message,
-        status,
+        message: (error as Error).message,
+        status: status ?? 0,
       });
     }
   }
 
-  async resolveDownloadPath(pathOrUrl) {
+  async resolveDownloadPath(pathOrUrl: string): Promise<ResolveDownloadResult> {
     const isAbsolute = /^https?:\/\//i.test(pathOrUrl);
     const requestUrl = isAbsolute ? pathOrUrl : pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
 
     try {
       const response = await httpClient.get(requestUrl, {
         maxRedirects: 0,
-        validateStatus: (status) => status >= 200 && status < 400,
+        validateStatus: (status: number) => status >= 200 && status < 400,
       });
 
-      const location = response.headers.location || null;
+      const location = (response.headers['location'] as string) ?? null;
       return {
         location,
         status: response.status,
       };
     } catch (error) {
-      if (error.response) {
+      const axiosError = error as { response?: { headers?: Record<string, string>; status?: number }; message?: string };
+      if (axiosError.response) {
         return {
-          location: error.response.headers?.location || null,
-          status: error.response.status,
+          location: axiosError.response.headers?.['location'] ?? null,
+          status: axiosError.response.status ?? 0,
         };
       }
 
       throw new AppError('Failed to resolve downloader link', 502, {
         pathOrUrl,
-        message: error.message,
+        message: (error as Error).message,
       });
     }
   }
 }
-
-export { MasstamilanClient };

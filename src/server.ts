@@ -1,7 +1,7 @@
-﻿const http = require('http');
-const { app } = require('./app');
-const { env } = require('./config/env');
-const { logger } = require('./config/logger');
+import http from 'node:http';
+import { app } from './app.js';
+import { env } from './config/env.js';
+import { logger } from './config/logger.js';
 
 const server = http.createServer(app);
 
@@ -9,7 +9,7 @@ server.listen(env.port, () => {
   logger.info({ port: env.port, env: env.nodeEnv }, 'Server started');
 });
 
-function shutdown(signal) {
+function shutdown(signal: string): void {
   logger.info({ signal }, 'Graceful shutdown started');
   server.close((err) => {
     if (err) {

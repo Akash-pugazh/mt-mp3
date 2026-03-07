@@ -1,11 +1,17 @@
-﻿const { ZodError } = require('zod');
-const { AppError } = require('../errors/AppError');
-const { logger } = require('../config/logger');
+import type { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
+import { AppError } from '../errors/AppError.js';
+import { logger } from '../config/logger.js';
 
-function errorHandler(err, req, res, _next) {
+export function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  _next: NextFunction,
+): void {
   let statusCode = 500;
   let message = 'Internal server error';
-  let details = null;
+  let details: unknown = null;
 
   if (err instanceof AppError) {
     statusCode = err.statusCode;
@@ -36,5 +42,3 @@ function errorHandler(err, req, res, _next) {
     },
   });
 }
-
-module.exports = { errorHandler };

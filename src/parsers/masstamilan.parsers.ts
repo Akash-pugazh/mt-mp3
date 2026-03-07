@@ -1,5 +1,16 @@
-﻿const cheerio = require('cheerio');
-const { stripQueryAndHash, toAbsolute } = require('../utils/url');
+import * as cheerio from 'cheerio';
+import { stripQueryAndHash, toAbsolute } from '../utils/url.js';
+import type {
+  MovieItem,
+  SongItem,
+  AlbumData,
+  SongPageData,
+  AutocompleteItem,
+  AlbumTrack,
+  RawAutocompleteItem,
+  SongRow,
+  DownloadEntry,
+} from '../types/api.types.js';
 
 const BLOCKED_ROOT_PATHS = new Set([
   '/',
@@ -15,7 +26,7 @@ const BLOCKED_ROOT_PATHS = new Set([
   '#',
 ]);
 
-function normalizeHref(href) {
+function normalizeHref(href: string | undefined): string | null {
   if (!href) return null;
   const stripped = stripQueryAndHash(href.trim());
   if (!stripped.startsWith('/')) return null;
@@ -23,11 +34,11 @@ function normalizeHref(href) {
   return stripped;
 }
 
-function extractAlbumSlug(pathname) {
+function extractAlbumSlug(pathname: string): string | null {
   const segments = pathname.split('/').filter(Boolean);
   if (segments.length !== 1) return null;
 
-  const slug = segments[0];
+  const slug = segments[0]!;
   if (/\.(png|css|js|xml|txt|ico|jpg|jpeg|webp)$/i.test(slug)) {
     return null;
   }
@@ -49,10 +60,10 @@ function extractAlbumSlug(pathname) {
   return slug;
 }
 
-function parseMovieListHtml(html, baseUrl) {
+export function parseMovieListHtml(html: string, baseUrl: string): MovieItem[] {
   const $ = cheerio.load(html);
-  const seen = new Set();
-  const movies = [];
+  const seen = new Set<string>();
+  const movies: MovieItem[] = [];
 
   $('a[href]').each((_i, el) => {
     const href = normalizeHref($(el).attr('href'));
@@ -76,41 +87,41 @@ function parseMovieListHtml(html, baseUrl) {
   return movies;
 }
 
-function parseAlbumTracksFromScript(html) {
+function parseAlbumTracksFromScript(html: string): AlbumTrack[] {
   const scriptMatch = html.match(/window\.albumTracks\s*=\s*(\[[\s\S]*?\]);/);
-  if (!scriptMatch) return [];
+  if (!scriptMatch?.[1]) return [];
 
   try {
-    const parsed = JSON.parse(scriptMatch[1]);
+    const parsed: unknown = JSON.parse(scriptMatch[1]);
     if (!Array.isArray(parsed)) return [];
 
-    return parsed.map((item) => ({
-      songId: item.id,
-      title: item.name,
-      artists: item.artists,
-      movieTitle: item.m_name,
-      imageName: item.img_name,
-      playerDownloadPath: item.dl_path || null,
+    return (parsed as Array<Record<string, unknown>>).map((item) => ({
+      songId: item['id'] as number,
+      title: item['name'] as string,
+      artists: item['artists'] as string | undefined,
+      movieTitle: item['m_name'] as string | undefined,
+      imageName: item['img_name'] as string | undefined,
+      playerDownloadPath: (item['dl_path'] as string) || null,
     }));
-  } catch (_err) {
+  } catch {
     return [];
   }
 }
 
-function parseAlbumPageHtml(html, slug, baseUrl) {
+export function parseAlbumPageHtml(html: string, slug: string, baseUrl: string): AlbumData {
   const $ = cheerio.load(html);
   const title = $('h1').first().text().replace(/\s+/g, ' ').trim() || slug;
 
-  const songRows = [];
-  const downloadsBySongId = new Map();
-  let movieId = null;
+  const songRows: SongRow[] = [];
+  const downloadsBySongId = new Map<number, DownloadEntry>();
+  let movieId: number | null = null;
 
   $('a[href]').each((_i, el) => {
     const href = normalizeHref($(el).attr('href'));
     if (!href) return;
 
     const songMatch = href.match(/^\/(\d+)\/([a-z0-9-]+)-mp3-song$/i);
-    if (songMatch) {
+    if (songMatch?.[1] && songMatch[2]) {
       const text = $(el).text().replace(/\s+/g, ' ').trim();
       songRows.push({
         movieId: Number(songMatch[1]),
@@ -129,12 +140,12 @@ function parseAlbumPageHtml(html, slug, baseUrl) {
     const d320Match = href.match(/^\/downloader\/[^/]+\/\d+\/d320_cdn\/(\d+)\//i);
 
     if (d128Match || d320Match) {
-      const songId = Number((d128Match || d320Match)[1]);
-      const entry = downloadsBySongId.get(songId) || {
+      const songId = Number((d128Match ?? d320Match)![1]);
+      const entry: DownloadEntry = downloadsBySongId.get(songId) ?? {
         movieId: null,
         songId,
         songSlug: null,
-        title: $(el).attr('title') || null,
+        title: $(el).attr('title') ?? null,
         songPagePath: null,
         songPageUrl: null,
         download128Path: null,
@@ -148,62 +159,77 @@ function parseAlbumPageHtml(html, slug, baseUrl) {
   });
 
   const albumTracks = parseAlbumTracksFromScript(html);
-  const normalizedTitleMap = new Map(
+  const normalizedTitleMap = new Map<string, SongRow>(
     songRows.map((song) => [song.title.toLowerCase().trim(), song]),
   );
-  const songs = [];
+  const songs: SongItem[] = [];
 
   for (const track of albumTracks) {
-    const baseSong = normalizedTitleMap.get(track.title.toLowerCase().trim()) || {
-      movieId: movieId || null,
-      songSlug: null,
+    const baseSong: SongRow | undefined = normalizedTitleMap.get(track.title.toLowerCase().trim());
+    const baseSongDefaults = baseSong ?? {
+      movieId: movieId ?? null as number | null,
+      songSlug: '',
       title: track.title,
-      songPagePath: null,
-      songPageUrl: null,
-      download128Path: null,
-      download320Path: null,
+      songPagePath: null as string | null,
+      songPageUrl: null as string | null,
+      download128Path: null as string | null,
+      download320Path: null as string | null,
     };
-    const downloadPaths = downloadsBySongId.get(track.songId) || {};
+    const downloadPaths = downloadsBySongId.get(track.songId);
 
     songs.push({
-      ...baseSong,
+      ...baseSongDefaults,
       songId: track.songId,
-      title: track.title || baseSong.title,
-      artists: track.artists || null,
-      movieTitle: track.movieTitle || title,
-      imageName: track.imageName || null,
-      playerDownloadPath: track.playerDownloadPath || null,
-      download128Path: baseSong.download128Path || downloadPaths.download128Path || null,
-      download320Path: baseSong.download320Path || downloadPaths.download320Path || null,
+      title: track.title || baseSongDefaults.title,
+      artists: track.artists ?? null,
+      movieTitle: track.movieTitle ?? title,
+      imageName: track.imageName ?? null,
+      playerDownloadPath: track.playerDownloadPath ?? null,
+      download128Path: baseSongDefaults.download128Path ?? downloadPaths?.download128Path ?? null,
+      download320Path: baseSongDefaults.download320Path ?? downloadPaths?.download320Path ?? null,
     });
   }
 
   if (songs.length === 0) {
-    songs.push(...songRows);
+    songs.push(
+      ...songRows.map((row): SongItem => ({
+        movieId: row.movieId,
+        songSlug: row.songSlug,
+        title: row.title,
+        songPagePath: row.songPagePath,
+        songPageUrl: row.songPageUrl,
+        download128Path: row.download128Path,
+        download320Path: row.download320Path,
+        artists: null,
+        movieTitle: null,
+        imageName: null,
+        playerDownloadPath: null,
+      })),
+    );
   }
 
-  const songsWithUrls = songs.map((song) => {
+  const songsWithUrls: SongItem[] = songs.map((song) => {
     const fallbackById = song.songId ? downloadsBySongId.get(song.songId) : null;
 
     return {
       ...song,
-      download128Path: song.download128Path || fallbackById?.download128Path || null,
-      download320Path: song.download320Path || fallbackById?.download320Path || null,
+      download128Path: song.download128Path ?? fallbackById?.download128Path ?? null,
+      download320Path: song.download320Path ?? fallbackById?.download320Path ?? null,
       download128Url:
-        song.download128Path || fallbackById?.download128Path
-          ? toAbsolute(baseUrl, song.download128Path || fallbackById?.download128Path)
+        song.download128Path ?? fallbackById?.download128Path
+          ? toAbsolute(baseUrl, (song.download128Path ?? fallbackById?.download128Path)!)
           : null,
       download320Url:
-        song.download320Path || fallbackById?.download320Path
-          ? toAbsolute(baseUrl, song.download320Path || fallbackById?.download320Path)
+        song.download320Path ?? fallbackById?.download320Path
+          ? toAbsolute(baseUrl, (song.download320Path ?? fallbackById?.download320Path)!)
           : null,
     };
   });
 
   const zip128Path =
-    $('a[href^="/downloader/"][href*="/zip128/"]').first().attr('href') || null;
+    $('a[href^="/downloader/"][href*="/zip128/"]').first().attr('href') ?? null;
   const zip320Path =
-    $('a[href^="/downloader/"][href*="/zip320/"]').first().attr('href') || null;
+    $('a[href^="/downloader/"][href*="/zip320/"]').first().attr('href') ?? null;
 
   return {
     title,
@@ -217,9 +243,14 @@ function parseAlbumPageHtml(html, slug, baseUrl) {
   };
 }
 
-function parseSongPageHtml(html, movieId, songSlug, baseUrl) {
+export function parseSongPageHtml(
+  html: string,
+  movieId: string,
+  songSlug: string,
+  baseUrl: string,
+): SongPageData {
   const album = parseAlbumPageHtml(html, `${movieId}/${songSlug}-mp3-song`, baseUrl);
-  const current = album.songs.find((song) => song.songSlug === songSlug) || null;
+  const current = album.songs.find((song) => song.songSlug === songSlug) ?? null;
 
   return {
     ...album,
@@ -227,10 +258,13 @@ function parseSongPageHtml(html, movieId, songSlug, baseUrl) {
   };
 }
 
-function parseAutocompleteJson(data, baseUrl) {
+export function parseAutocompleteJson(
+  data: unknown,
+  baseUrl: string,
+): AutocompleteItem[] {
   if (!Array.isArray(data)) return [];
 
-  return data.map((item) => ({
+  return (data as RawAutocompleteItem[]).map((item) => ({
     name: item.n,
     subtitle: item.s,
     slug: item.l,
@@ -238,10 +272,3 @@ function parseAutocompleteJson(data, baseUrl) {
     url: toAbsolute(baseUrl, `/${item.l}`),
   }));
 }
-
-export {
-  parseMovieListHtml,
-  parseAlbumPageHtml,
-  parseSongPageHtml,
-  parseAutocompleteJson,
-};

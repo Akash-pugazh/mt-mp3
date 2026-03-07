@@ -1,6 +1,6 @@
-﻿const { z } = require('zod');
+import { z } from 'zod';
 
-const movieListQuerySchema = z
+export const movieListQuerySchema = z
   .object({
     source: z
       .enum(['tamil-songs', 'latest-updates', 'tag', 'year', 'music', 'search'])
@@ -33,27 +33,19 @@ const movieListQuerySchema = z
     }
   });
 
-const slugParamSchema = z.object({
+export const slugParamSchema = z.object({
   slug: z.string().min(1).max(200),
 });
 
-const songParamSchema = z.object({
+export const songParamSchema = z.object({
   movieId: z.coerce.number().int().positive(),
   songSlug: z.string().min(1).max(300),
 });
 
-const autocompleteQuerySchema = z.object({
+export const autocompleteQuerySchema = z.object({
   keyword: z.string().min(1).max(100),
 });
 
-const resolveDownloadQuerySchema = z.object({
+export const resolveDownloadQuerySchema = z.object({
   path: z.string().min(1),
 });
-
-module.exports = {
-  movieListQuerySchema,
-  slugParamSchema,
-  songParamSchema,
-  autocompleteQuerySchema,
-  resolveDownloadQuerySchema,
-};
