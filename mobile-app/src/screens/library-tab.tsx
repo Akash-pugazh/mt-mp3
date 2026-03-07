@@ -1,13 +1,5 @@
 ﻿import React, { useMemo, useState } from 'react';
-import {
-  Alert,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Alert, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import { HeroHeader } from '../components/hero-header';
 import { SongListItem } from '../components/song-list-item';
 import { useLibrary } from '../context/library-context';
@@ -138,7 +130,9 @@ export function LibraryTab() {
             style={[styles.segmentBtn, section === 'playlists' && styles.segmentBtnActive]}
             onPress={() => setSection('playlists')}
           >
-            <Text style={[styles.segmentLabel, section === 'playlists' && styles.segmentLabelActive]}>
+            <Text
+              style={[styles.segmentLabel, section === 'playlists' && styles.segmentLabelActive]}
+            >
               Playlists
             </Text>
           </Pressable>

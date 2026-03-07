@@ -164,7 +164,9 @@ export function HomeTab() {
           void runLoad(page + 1, false);
         }}
         ListFooterComponent={
-          loadingMore ? <ActivityIndicator color={palette.accent} style={{ marginTop: 10 }} /> : null
+          loadingMore ? (
+            <ActivityIndicator color={palette.accent} style={{ marginTop: 10 }} />
+          ) : null
         }
         renderItem={({ item }) => (
           <SongListItem

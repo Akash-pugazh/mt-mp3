@@ -20,7 +20,11 @@ router.get(
   validate(slugParamSchema, 'params'),
   asyncHandler(controller.getAlbumSongs),
 );
-router.get('/songs/:movieId/:songSlug', validate(songParamSchema, 'params'), asyncHandler(controller.getSong));
+router.get(
+  '/songs/:movieId/:songSlug',
+  validate(songParamSchema, 'params'),
+  asyncHandler(controller.getSong),
+);
 router.get(
   '/search/autocomplete',
   validate(autocompleteQuerySchema, 'query'),

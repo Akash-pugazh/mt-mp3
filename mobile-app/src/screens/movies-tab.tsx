@@ -246,9 +246,13 @@ export function MoviesTab() {
           void loadMovies(page + 1, false);
         }}
         ListFooterComponent={
-          loadingMore ? <ActivityIndicator color={palette.accent} style={{ marginTop: 12 }} /> : null
+          loadingMore ? (
+            <ActivityIndicator color={palette.accent} style={{ marginTop: 12 }} />
+          ) : null
         }
-        renderItem={({ item }) => <MovieListItem movie={item} onPress={() => setSelectedMovie(item)} />}
+        renderItem={({ item }) => (
+          <MovieListItem movie={item} onPress={() => setSelectedMovie(item)} />
+        )}
       />
     </View>
   );

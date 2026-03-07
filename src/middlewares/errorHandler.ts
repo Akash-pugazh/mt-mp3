@@ -3,12 +3,7 @@ import { ZodError } from 'zod';
 import { AppError } from '../errors/AppError.js';
 import { logger } from '../config/logger.js';
 
-export function errorHandler(
-  err: Error,
-  req: Request,
-  res: Response,
-  _next: NextFunction,
-): void {
+export function errorHandler(err: Error, req: Request, res: Response, _next: NextFunction): void {
   let statusCode = 500;
   let message = 'Internal server error';
   let details: unknown = null;

@@ -442,7 +442,10 @@ export const openApiSpec: OpenAPIV3.Document = {
                     items: { $ref: '#/components/schemas/SongItem' },
                   },
                   currentSong: {
-                    oneOf: [{ $ref: '#/components/schemas/SongItem' }, { type: 'string', nullable: true }],
+                    oneOf: [
+                      { $ref: '#/components/schemas/SongItem' },
+                      { type: 'string', nullable: true },
+                    ],
                   },
                   zip128Path: { type: 'string', nullable: true },
                   zip320Path: { type: 'string', nullable: true },

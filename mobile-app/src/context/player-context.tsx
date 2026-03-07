@@ -51,7 +51,9 @@ export function PlayerProvider({ children }: { children: React.ReactNode }) {
       playsInSilentModeIOS: true,
     }).catch(() => undefined);
 
-    getCachedCount().then(setCacheCount).catch(() => undefined);
+    getCachedCount()
+      .then(setCacheCount)
+      .catch(() => undefined);
 
     return () => {
       const sound = soundRef.current;

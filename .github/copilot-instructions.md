@@ -3,6 +3,7 @@
 ## Build, Test, and Lint Commands
 
 ### Backend (Node.js/Express)
+
 - **Install dependencies:**
   ```bash
   npm install
@@ -37,6 +38,7 @@
   ```
 
 ### Mobile App (React Native + Expo)
+
 - **Install dependencies:**
   ```bash
   cd mobile-app

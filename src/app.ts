@@ -22,7 +22,8 @@ app.use(requestIdMiddleware as RequestHandler);
 app.use(
   (pinoHttp as unknown as typeof pinoHttp.default)({
     logger,
-    genReqId: ((req: IncomingMessage) => (req as unknown as Request).requestId) as pinoHttp.GenReqId,
+    genReqId: ((req: IncomingMessage) =>
+      (req as unknown as Request).requestId) as pinoHttp.GenReqId,
   }) as unknown as RequestHandler,
 );
 app.use(helmet());
