@@ -27,6 +27,7 @@ interface PlayerContextType {
   setVolume: (v: number) => void;
   toggleShuffle: () => void;
   cycleRepeat: () => void;
+  toggleRepeat: () => void;
 
   toggleLike: (id: string) => void;
   isLiked: (id: string) => boolean;
@@ -134,7 +135,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         artwork: [
           { src: toHighQualityImage(currentSong.imageUrl, 256), sizes: "256x256", type: "image/jpeg" },
           { src: toHighQualityImage(currentSong.imageUrl, 512), sizes: "512x512", type: "image/jpeg" },
-          { src: toHighQualityImage(currentSong.imageUrl, 1024), sizes: "1024x1024", type: "image/jpeg" },
+          { src: toHighQualityImage(currentSong.imageUrl, 2048), sizes: "2048x2048", type: "image/jpeg" },
         ],
       });
     } catch {
@@ -325,7 +326,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       artwork: [
         { src: toHighQualityImage(currentSong.imageUrl, 256), sizes: "256x256", type: "image/jpeg" },
         { src: toHighQualityImage(currentSong.imageUrl, 512), sizes: "512x512", type: "image/jpeg" },
-        { src: toHighQualityImage(currentSong.imageUrl, 1024), sizes: "1024x1024", type: "image/jpeg" },
+        { src: toHighQualityImage(currentSong.imageUrl, 2048), sizes: "2048x2048", type: "image/jpeg" },
       ],
     }).catch(() => {});
   }, [currentSong?.id]);
@@ -367,6 +368,9 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const toggleShuffle = useCallback(() => setShuffle(s => !s), []);
   const cycleRepeat = useCallback(() => {
     setRepeat(r => r === "off" ? "all" : r === "all" ? "one" : "off");
+  }, []);
+  const toggleRepeat = useCallback(() => {
+    setRepeat(r => (r === "off" ? "all" : "off"));
   }, []);
 
   const toggleLike = useCallback((id: string) => {
@@ -432,6 +436,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       shuffle, repeat, likedIds, playlists,
       play, pause, toggle, next: handleNext, previous, seek, setVolume,
       toggleShuffle, cycleRepeat,
+      toggleRepeat,
       toggleLike, isLiked: isLikedFn,
       createPlaylist: createPlaylistFn, deletePlaylist: deletePlaylistFn,
       addToPlaylist: addToPlaylistFn, removeFromPlaylist: removeFromPlaylistFn,

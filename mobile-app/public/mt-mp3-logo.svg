@@ -1,0 +1,26 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1024" height="1024" rx="230" fill="url(#bg)"/>
+  <rect x="36" y="36" width="952" height="952" rx="206" stroke="url(#frame)" stroke-opacity="0.36" stroke-width="8"/>
+  <circle cx="512" cy="512" r="332" fill="url(#spot)"/>
+  <text x="512" y="602" text-anchor="middle" font-family="'Sora','Manrope','Segoe UI',sans-serif" font-size="430" font-weight="800" letter-spacing="-22" fill="url(#mtFill)">MT</text>
+  <text x="512" y="602" text-anchor="middle" font-family="'Sora','Manrope','Segoe UI',sans-serif" font-size="430" font-weight="800" letter-spacing="-22" fill="none" stroke="#FFFFFF" stroke-opacity="0.26" stroke-width="8">MT</text>
+  <defs>
+    <linearGradient id="bg" x1="124" y1="94" x2="910" y2="944" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0C0C0F"/>
+      <stop offset="1" stop-color="#020202"/>
+    </linearGradient>
+    <radialGradient id="spot" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 446) rotate(90) scale(350)">
+      <stop stop-color="#2D2A35"/>
+      <stop offset="1" stop-color="#0B0B0C" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="mtFill" x1="272" y1="286" x2="748" y2="694" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8F7FF"/>
+      <stop offset="0.55" stop-color="#DAD6FF"/>
+      <stop offset="1" stop-color="#FFDFA5"/>
+    </linearGradient>
+    <linearGradient id="frame" x1="74" y1="70" x2="956" y2="972" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#FFCD78"/>
+    </linearGradient>
+  </defs>
+</svg>

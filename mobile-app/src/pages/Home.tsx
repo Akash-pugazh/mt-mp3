@@ -2,11 +2,17 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import SongRow from "@/components/SongRow";
 import { SectionHeader, SkeletonSongRow, SkeletonHero } from "@/components/ui/states";
 import { motion } from "framer-motion";
-import { Play, TrendingUp, Clock, Wifi, WifiOff } from "lucide-react";
+import { Play, TrendingUp, WifiOff, Search } from "lucide-react";
 import { useState, useEffect } from "react";
 import { listMovies, getMovieSongs } from "@/lib/api";
 import { toHighQualityImage } from "@/lib/images";
-import type { Song, Movie } from "@/types/music";
+import type { Song } from "@/types/music";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import CachedImage from "@/components/CachedImage";
+import GlobalSearchDialog from "@/components/GlobalSearchDialog";
+import { usePullToSearch } from "@/hooks/usePullToSearch";
 
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.04 } } };
 const fadeItem = { hidden: { opacity: 0, y: 12 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } } };
@@ -16,6 +22,8 @@ const Home = () => {
   const [apiSongs, setApiSongs] = useState<Song[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOnline, setIsOnline] = useState(true);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const { pullOffset, isPulling } = usePullToSearch(searchOpen, () => setSearchOpen(true));
 
   // Try to load from API, fall back to mock
   useEffect(() => {
@@ -56,26 +64,32 @@ const Home = () => {
 
   const songs = apiSongs.length > 0 ? apiSongs : allSongs;
   const hero = songs[0];
-  const quickPicks = songs.slice(1, 6);
   const trending = songs;
 
   return (
     <div className="relative pb-40 min-h-screen overflow-y-auto scrollbar-hide">
+      <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+
       <motion.div
         variants={stagger}
         initial="hidden"
         animate="visible"
         className="relative z-10 max-w-lg mx-auto"
+        style={{ y: pullOffset }}
+        transition={{ type: "spring", stiffness: isPulling ? 1200 : 460, damping: isPulling ? 72 : 38, mass: 0.5 }}
       >
         {/* Header */}
         <motion.div variants={fadeItem} className="px-5 pt-6 pb-1">
-          <div className="flex items-center gap-2">
-            <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-[0.2em]">Tamil Music</p>
-            {!isOnline && <WifiOff size={10} className="text-muted-foreground/40" />}
+          <div className="flex items-center justify-end">
+            {!isOnline && <WifiOff size={11} className="text-muted-foreground/50" />}
           </div>
-          <h1 className="text-[26px] font-bold font-display mt-0.5 tracking-tight text-foreground">
-            Isai
-          </h1>
+          <h1 className="text-[34px] font-bold font-display mt-0.5 tracking-normal uppercase text-foreground">MT-MP3 MUSIC</h1>
+          <button
+            onClick={() => setSearchOpen(true)}
+            className="relative mt-3 w-full h-12 px-5 rounded-2xl text-muted-foreground text-[14px] bg-foreground/[0.06] backdrop-blur-xl border border-foreground/[0.14] shadow-[inset_0_1px_0_hsl(var(--foreground)/0.12)]"
+          >
+            <Search size={17} className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2" />
+          </button>
         </motion.div>
 
         {/* Loading */}
@@ -91,52 +105,23 @@ const Home = () => {
         {/* Hero */}
         {hero && !loading && (
           <motion.div variants={fadeItem} className="px-5 mt-5">
-            <div
-              className="relative rounded-2xl overflow-hidden cursor-pointer group"
+            <Card
+              className="relative rounded-2xl overflow-hidden cursor-pointer group border-foreground/10 bg-surface-1"
               onClick={() => play(hero, songs)}
             >
               <div className="aspect-[2/1] relative">
-                <img src={toHighQualityImage(hero.imageUrl, 1600)} alt={hero.title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
+                <CachedImage src={toHighQualityImage(hero.imageUrl, 2200)} alt={hero.title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/40 mb-1.5">Featured</p>
+                  <Badge variant="secondary" className="mb-2 text-[10px] uppercase tracking-[0.16em] bg-foreground/10 text-foreground border-foreground/10">Featured</Badge>
                   <h2 className="text-[20px] font-bold text-foreground font-display leading-tight tracking-tight">{hero.title}</h2>
-                  <p className="text-[13px] text-foreground/50 mt-1 font-normal">{hero.artist} · {hero.movie}</p>
+                  <p className="text-[14px] text-foreground/60 mt-1 font-normal">{hero.artist} · {hero.movie}</p>
                 </div>
-                <button className="absolute bottom-4 right-4 w-11 h-11 rounded-full bg-foreground flex items-center justify-center group-hover:scale-110 transition-transform">
-                  <Play size={18} fill="currentColor" className="text-background ml-0.5" />
-                </button>
+                <Button size="icon" className="absolute bottom-4 right-4 w-12 h-12 rounded-full group-hover:scale-110 transition-transform">
+                  <Play size={20} fill="currentColor" className="text-background ml-0.5" />
+                </Button>
               </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Quick Picks */}
-        {!loading && (
-          <motion.div variants={fadeItem} className="mt-7">
-            <div className="px-5">
-              <SectionHeader title="Quick Picks" icon={Clock} />
-            </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide px-5 pb-1">
-              {quickPicks.map(song => (
-                <button
-                  key={song.id}
-                  onClick={() => play(song, songs)}
-                  className="flex-shrink-0 w-[130px] text-left group"
-                >
-                  <div className="relative w-[130px] h-[130px] rounded-2xl overflow-hidden mb-2">
-                    <img src={toHighQualityImage(song.imageUrl, 900)} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <div className="w-9 h-9 rounded-full bg-foreground/90 flex items-center justify-center">
-                        <Play size={14} fill="currentColor" className="text-background ml-0.5" />
-                      </div>
-                    </div>
-                  </div>
-                  <p className="text-[13px] font-semibold truncate text-foreground leading-tight">{song.title}</p>
-                  <p className="text-[11px] text-muted-foreground truncate mt-0.5 font-normal">{song.artist}</p>
-                </button>
-              ))}
-            </div>
+            </Card>
           </motion.div>
         )}
 

@@ -1,9 +1,11 @@
 import { Song } from "@/types/music";
 import { usePlayer } from "@/contexts/PlayerContext";
-import { Play, Pause, Heart, MoreHorizontal, Plus } from "lucide-react";
+import { Play, Heart, MoreHorizontal, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WaveformIndicator } from "@/components/ui/states";
 import { toHighQualityImage } from "@/lib/images";
+import CachedImage from "@/components/CachedImage";
+import { useNavigate } from "react-router-dom";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
@@ -20,6 +22,7 @@ interface SongRowProps {
 
 const SongRow = ({ song, queue, index, compact = false }: SongRowProps) => {
   const { play, currentSong, isPlaying, toggle, isLiked, toggleLike, playlists, addToPlaylist, prefetchSong } = usePlayer();
+  const navigate = useNavigate();
   const active = currentSong?.id === song.id;
   const liked = isLiked(song.id);
 
@@ -32,39 +35,38 @@ const SongRow = ({ song, queue, index, compact = false }: SongRowProps) => {
           ? "bg-foreground/[0.04]"
           : "hover:bg-foreground/[0.03] active:scale-[0.98]"
       )}
-      onClick={() => active ? toggle() : play(song, queue)}
+      onClick={() => {
+        if (active) {
+          toggle();
+          navigate("/now-playing");
+          return;
+        }
+        play(song, queue);
+        navigate("/now-playing");
+      }}
       onPointerDown={() => prefetchSong(song)}
     >
-      {/* Track number */}
-      {index !== undefined && (
-        <div className="w-6 flex-shrink-0 flex items-center justify-center">
-          {active && isPlaying ? (
-            <WaveformIndicator isPlaying={true} />
-          ) : (
-            <span className={cn(
-              "text-[12px] font-medium tabular-nums font-body",
-              active ? "text-foreground" : "text-muted-foreground/50"
-            )}>
-              {String(index + 1).padStart(2, "0")}
-            </span>
-          )}
-        </div>
-      )}
-
       {/* Cover art */}
       <div className={cn(
         "relative rounded-lg overflow-hidden flex-shrink-0",
         compact ? "w-10 h-10" : "w-12 h-12"
       )}>
-        <img src={toHighQualityImage(song.imageUrl, 600)} alt={song.title} className="w-full h-full object-cover" loading="lazy" />
+        <CachedImage
+          src={toHighQualityImage(song.imageUrl, 900)}
+          alt={song.title}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
         <div className={cn(
           "absolute inset-0 bg-black/40 flex items-center justify-center transition-all duration-200",
           active ? "opacity-100" : "opacity-0 group-hover:opacity-100"
         )}>
-          {active && isPlaying
-            ? <Pause size={compact ? 14 : 16} fill="currentColor" className="text-white" />
-            : <Play size={compact ? 14 : 16} fill="currentColor" className="text-white ml-0.5" />
-          }
+          {active && isPlaying ? (
+            <WaveformIndicator isPlaying={true} />
+          ) : (
+            <Play size={compact ? 15 : 18} fill="currentColor" className="text-white ml-0.5" />
+          )}
         </div>
       </div>
 
@@ -72,14 +74,14 @@ const SongRow = ({ song, queue, index, compact = false }: SongRowProps) => {
       <div className="flex-1 min-w-0">
         <p className={cn(
           "font-semibold truncate leading-tight",
-          compact ? "text-[13px]" : "text-[14px]",
+          compact ? "text-[14px]" : "text-[15px]",
           active ? "text-foreground" : "text-foreground/90"
         )}>
           {song.title}
         </p>
         <p className={cn(
           "text-muted-foreground truncate mt-0.5 font-normal",
-          compact ? "text-[11px]" : "text-[12px]"
+          compact ? "text-[12px]" : "text-[13px]"
         )}>
           {song.artist}
         </p>

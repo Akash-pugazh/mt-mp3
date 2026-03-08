@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "== mt-mp3 Android install (debug) ==" -ForegroundColor Cyan
+Write-Host "== MT-Mp3 Android install (debug) ==" -ForegroundColor Cyan
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $androidDir = Join-Path $projectRoot "android"

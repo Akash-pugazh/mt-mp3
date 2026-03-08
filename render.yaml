@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: masstamilan-express-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: LOG_LEVEL
+        value: info
+      - key: BASE_URL
+        value: https://www.masstamilan.dev
+      - key: REQUEST_TIMEOUT_MS
+        value: 15000
+      - key: RATE_LIMIT_WINDOW_MS
+        value: 60000
+      - key: RATE_LIMIT_MAX
+        value: 60
+      - key: CORS_ORIGIN
+        value: "*"

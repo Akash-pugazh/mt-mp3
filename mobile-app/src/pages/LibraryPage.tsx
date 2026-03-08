@@ -6,6 +6,8 @@ import { Plus, Trash2, Music, ChevronLeft, Heart, ListMusic, ChevronRight } from
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
+import GlobalSearchDialog from "@/components/GlobalSearchDialog";
+import { usePullToSearch } from "@/hooks/usePullToSearch";
 
 const fadeItem = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } } };
 
@@ -13,7 +15,9 @@ const LibraryPage = () => {
   const { playlists, createPlaylist, deletePlaylist, getPlaylistSongs, likedIds, allSongs } = usePlayer();
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [view, setView] = useState<"main" | "liked" | string>("main");
+  const { pullOffset, isPulling } = usePullToSearch(searchOpen, () => setSearchOpen(true));
 
   const handleCreate = () => {
     if (newName.trim()) { createPlaylist(newName.trim()); setNewName(""); setOpen(false); }
@@ -26,12 +30,13 @@ const LibraryPage = () => {
     const pl = playlists.find(p => p.id === view);
     const songs = pl ? getPlaylistSongs(pl.id) : [];
     return (
-      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="pb-40 min-h-screen overflow-y-auto scrollbar-hide">
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="pb-40 min-h-screen overflow-y-auto scrollbar-hide" style={{ y: pullOffset }}>
+        <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
         <div className="px-5 pt-6 max-w-lg mx-auto">
           <button onClick={() => setView("main")} className="flex items-center gap-1 text-muted-foreground text-[13px] font-medium mb-4 active:opacity-60">
             <ChevronLeft size={16} /> Library
           </button>
-          <h1 className="text-[22px] font-bold font-display text-foreground tracking-tight">{pl?.name}</h1>
+          <h1 className="text-[22px] font-bold font-display text-foreground tracking-normal uppercase">{pl?.name}</h1>
           <p className="text-[12px] text-muted-foreground mt-1 mb-5 font-normal">{songs.length} songs</p>
           {songs.length > 0 ? (
             <div className="space-y-0.5">{songs.map((s, i) => <SongRow key={s.id} song={s} queue={songs} index={i} />)}</div>
@@ -46,7 +51,8 @@ const LibraryPage = () => {
   // Liked view
   if (view === "liked") {
     return (
-      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="pb-40 min-h-screen overflow-y-auto scrollbar-hide">
+      <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }} className="pb-40 min-h-screen overflow-y-auto scrollbar-hide" style={{ y: pullOffset }}>
+        <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
         <div className="px-5 pt-6 max-w-lg mx-auto">
           <button onClick={() => setView("main")} className="flex items-center gap-1 text-muted-foreground text-[13px] font-medium mb-4 active:opacity-60">
             <ChevronLeft size={16} /> Library
@@ -56,7 +62,7 @@ const LibraryPage = () => {
               <Heart size={20} className="text-white" fill="currentColor" />
             </div>
             <div>
-              <h1 className="text-[22px] font-bold font-display text-foreground tracking-tight">Liked Songs</h1>
+              <h1 className="text-[22px] font-bold font-display text-foreground tracking-normal uppercase">Liked Songs</h1>
               <p className="text-[12px] text-muted-foreground font-normal">{likedSongs.length} songs</p>
             </div>
           </div>
@@ -73,14 +79,17 @@ const LibraryPage = () => {
   // Main library
   return (
     <div className="relative pb-40 min-h-screen overflow-y-auto scrollbar-hide">
+      <GlobalSearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
       <motion.div
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
         className="relative z-10 px-5 pt-6 max-w-lg mx-auto"
+        style={{ y: pullOffset }}
+        transition={{ type: "spring", stiffness: isPulling ? 1200 : 460, damping: isPulling ? 72 : 38, mass: 0.5 }}
       >
         <motion.div variants={fadeItem} className="flex items-center justify-between mb-6">
-          <h1 className="text-[26px] font-bold font-display tracking-tight text-foreground">Library</h1>
+          <h1 className="text-[32px] font-bold font-display tracking-normal uppercase text-foreground">Library</h1>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <button className="w-9 h-9 rounded-full bg-foreground/6 flex items-center justify-center active:scale-90 transition-transform">

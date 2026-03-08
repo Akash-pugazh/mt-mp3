@@ -17,7 +17,10 @@ class ApiError extends Error {
 
 const REQUEST_TIMEOUT_MS = 5000;
 const API_BASE_STORAGE_KEY = 'mt_api_base_url';
+const MOVIE_PREVIEW_CACHE_KEY = 'mt_movie_preview_cache_v1';
 let lastWorkingBase: string | null = null;
+const moviePreviewCache = new Map<string, string>();
+const moviePreviewInFlight = new Map<string, Promise<string>>();
 
 function normalizeBase(base: string): string {
   return base.replace(/\/+$/, '');
@@ -94,6 +97,31 @@ async function fetchJson<T>(path: string): Promise<T> {
   }
 
   throw lastError ?? new Error('API request failed');
+}
+
+function readPreviewCacheFromStorage() {
+  if (typeof window === 'undefined') return;
+  if (moviePreviewCache.size > 0) return;
+  try {
+    const raw = window.localStorage.getItem(MOVIE_PREVIEW_CACHE_KEY);
+    if (!raw) return;
+    const parsed = JSON.parse(raw) as Record<string, string>;
+    Object.entries(parsed).forEach(([slug, url]) => {
+      if (slug && url) moviePreviewCache.set(slug, url);
+    });
+  } catch {
+    // ignore storage parse failures
+  }
+}
+
+function persistPreviewCacheToStorage() {
+  if (typeof window === 'undefined') return;
+  try {
+    const payload = Object.fromEntries(moviePreviewCache.entries());
+    window.localStorage.setItem(MOVIE_PREVIEW_CACHE_KEY, JSON.stringify(payload));
+  } catch {
+    // ignore storage write failures
+  }
 }
 
 // ── Mapper: SongItem → Song ──
@@ -177,6 +205,31 @@ export async function getMovieSongs(slug: string): Promise<{ title: string; song
   } catch {
     return { title: slug, songs: [] };
   }
+}
+
+export async function getMoviePreviewImage(slug: string): Promise<string> {
+  if (!slug) return DEFAULT_ARTWORK_PREVIEW;
+
+  readPreviewCacheFromStorage();
+
+  const cached = moviePreviewCache.get(slug);
+  if (cached) return cached;
+
+  const existingInFlight = moviePreviewInFlight.get(slug);
+  if (existingInFlight) return existingInFlight;
+
+  const task = (async () => {
+    const result = await getMovieSongs(slug);
+    const preview = result.songs[0]?.imageUrl || DEFAULT_ARTWORK_PREVIEW;
+    moviePreviewCache.set(slug, preview);
+    persistPreviewCacheToStorage();
+    return preview;
+  })().finally(() => {
+    moviePreviewInFlight.delete(slug);
+  });
+
+  moviePreviewInFlight.set(slug, task);
+  return task;
 }
 
 export async function searchAutocomplete(keyword: string): Promise<AutocompleteItem[]> {
