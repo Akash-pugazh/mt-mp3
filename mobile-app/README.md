@@ -21,7 +21,7 @@ This folder now contains the primary app UI (mobile-first web app), replacing th
 ## API Configuration
 Set backend base URL:
 ```bash
-set VITE_API_BASE_URL=http://localhost:3000
+$env:VITE_API_BASE_URL="http://localhost:3000"
 ```
 
 Default fallback: `http://localhost:3000`
@@ -35,7 +35,7 @@ npm run dev
 ## Android Install (Capacitor)
 ```bash
 npm install
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
 npm run build
 npx cap sync android
 npx cap open android
@@ -59,7 +59,7 @@ MYAPP_UPLOAD_KEY_PASSWORD=your_key_password
 3. Build:
 ```bash
 cd ..
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
 npm run build
 npx cap sync android
 cd android
@@ -80,3 +80,4 @@ npm test
 ## Notes
 - App resolves playback URLs through backend endpoints so short-lived source links are refreshed.
 - LocalStorage is used for library persistence and song metadata caching.
+

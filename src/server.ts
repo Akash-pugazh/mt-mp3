@@ -5,8 +5,8 @@ import { logger } from './config/logger.js';
 
 const server = http.createServer(app);
 
-server.listen(env.port, () => {
-  logger.info({ port: env.port, env: env.nodeEnv }, 'Server started');
+server.listen(env.port, env.host, () => {
+  logger.info({ port: env.port, host: env.host, env: env.nodeEnv }, 'Server started');
 });
 
 function shutdown(signal: string): void {
@@ -24,3 +24,4 @@ function shutdown(signal: string): void {
 
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
+

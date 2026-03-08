@@ -11,6 +11,7 @@ function toInt(value: string | undefined, fallback: number): number {
 export interface EnvConfig {
   nodeEnv: string;
   port: number;
+  host: string;
   logLevel: string;
   baseUrl: string;
   requestTimeoutMs: number;
@@ -22,6 +23,7 @@ export interface EnvConfig {
 export const env: EnvConfig = {
   nodeEnv: process.env['NODE_ENV'] || 'development',
   port: toInt(process.env['PORT'], 3000),
+  host: process.env['HOST'] || '0.0.0.0',
   logLevel: process.env['LOG_LEVEL'] || 'info',
   baseUrl: process.env['BASE_URL'] || 'https://www.masstamilan.dev',
   requestTimeoutMs: toInt(process.env['REQUEST_TIMEOUT_MS'], 15000),
@@ -29,3 +31,5 @@ export const env: EnvConfig = {
   rateLimitMax: toInt(process.env['RATE_LIMIT_MAX'], 60),
   corsOrigin: process.env['CORS_ORIGIN'] || '*',
 };
+
+

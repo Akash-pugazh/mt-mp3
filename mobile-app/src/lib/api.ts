@@ -14,18 +14,76 @@ class ApiError extends Error {
   }
 }
 
+const REQUEST_TIMEOUT_MS = 5000;
+const API_BASE_STORAGE_KEY = 'mt_api_base_url';
+let lastWorkingBase: string | null = null;
+
+function normalizeBase(base: string): string {
+  return base.replace(/\/+$/, '');
+}
+
+function getCandidateBases(): string[] {
+  const candidates: string[] = [];
+  const push = (value?: string | null) => {
+    if (!value) return;
+    const normalized = normalizeBase(value.trim());
+    if (!normalized || candidates.includes(normalized)) return;
+    candidates.push(normalized);
+  };
+
+  push(lastWorkingBase);
+  push(API_BASE_URL);
+  for (const fallback of API_FALLBACK_BASE_URLS) {
+    push(fallback);
+  }
+
+  if (typeof window !== 'undefined') {
+    try {
+      push(window.localStorage.getItem(API_BASE_STORAGE_KEY));
+    } catch {
+      // ignore storage errors
+    }
+
+    const { protocol, hostname } = window.location;
+    if (protocol.startsWith('http') && hostname) {
+      push(`${protocol}//${hostname}:3000`);
+    }
+  }
+
+  return candidates;
+}
+
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutId = globalThis.setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    globalThis.clearTimeout(timeoutId);
+  }
+}
+
 async function fetchJson<T>(path: string): Promise<T> {
-  const bases = [API_BASE_URL, ...API_FALLBACK_BASE_URLS].filter(Boolean);
+  const bases = getCandidateBases();
   let lastError: Error | null = null;
 
   for (const base of bases) {
     const url = `${base}${path}`;
     try {
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const res = await fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } });
       if (!res.ok) {
         const body = await res.text();
         lastError = new ApiError(res.status, `API ${res.status}: ${body}`);
         continue;
+      }
+
+      lastWorkingBase = base;
+      if (typeof window !== 'undefined') {
+        try {
+          window.localStorage.setItem(API_BASE_STORAGE_KEY, base);
+        } catch {
+          // ignore storage errors
+        }
       }
 
       return (await res.json()) as T;
@@ -184,3 +242,5 @@ export async function resolvePlayableUrl(song: Song): Promise<string | null> {
 }
 
 export { ApiError };
+
+

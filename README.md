@@ -40,7 +40,7 @@ npm run dev
 
 Set API host for frontend:
 ```bash
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
 ```
 Then open on phone browser:
 - `http://<your-lan-ip>:8080`
@@ -52,7 +52,7 @@ App ID: `com.akashpugazh.mtmp3`
 ```bash
 cd mobile-app
 npm install
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
 npm run build
 npx cap sync android
 npx cap open android
@@ -72,7 +72,7 @@ Prerequisites:
 Terminal flow:
 ```bash
 cd mobile-app
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
 npm run build
 npx cap sync android
 
@@ -84,7 +84,7 @@ adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 
 One-command installer (from `mobile-app`):
 ```bash
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
 npm run android:install
 ```
 
@@ -110,7 +110,7 @@ MYAPP_UPLOAD_KEY_PASSWORD=your_key_password
 3. Build web + sync Android:
 ```bash
 cd mobile-app
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
 npm run build
 npx cap sync android
 ```
@@ -137,3 +137,24 @@ Output files:
 - [API endpoint analysis](./MASSTAMILAN_API_DOCUMENTATION.md)
 - [Product requirements](./PRD.md)
 - [Frontend app guide](./mobile-app/README.md)
+
+
+## Mobile Connectivity Troubleshooting
+1. Start backend with LAN binding (already default):
+```bash
+cd "C:\Users\aakas\Downloads\Test Project"
+npm run dev
+```
+2. In PowerShell, set API base before building Android app:
+```bash
+cd mobile-app
+$env:VITE_API_BASE_URL="http://<your-lan-ip>:3000"
+npm run android:install
+```
+3. On phone browser, confirm backend is reachable:
+- `http://<your-lan-ip>:3000/api/v1/health`
+4. If phone cannot reach backend:
+- Ensure PC and phone are on same Wi-Fi subnet.
+- Allow Node.js through Windows Firewall (Private network).
+- Verify backend is listening on all interfaces (`HOST=0.0.0.0`).
+- Rebuild/reinstall app after changing `VITE_API_BASE_URL` (it is compile-time).
