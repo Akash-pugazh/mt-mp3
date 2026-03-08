@@ -75,7 +75,10 @@ export function PlayerBar() {
         <Pressable style={styles.button} onPress={playPrevious}>
           <Text style={styles.buttonText}>Prev</Text>
         </Pressable>
-        <Pressable style={[styles.button, styles.primaryButton]} onPress={() => void togglePlayPause()}>
+        <Pressable
+          style={[styles.button, styles.primaryButton]}
+          onPress={() => void togglePlayPause()}
+        >
           <Text style={[styles.buttonText, styles.primaryButtonText]}>
             {isBuffering ? 'Buffering' : isPlaying ? 'Pause' : 'Play'}
           </Text>
