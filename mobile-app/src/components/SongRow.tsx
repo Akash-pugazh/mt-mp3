@@ -18,7 +18,7 @@ interface SongRowProps {
 }
 
 const SongRow = ({ song, queue, index, compact = false }: SongRowProps) => {
-  const { play, currentSong, isPlaying, toggle, isLiked, toggleLike, playlists, addToPlaylist } = usePlayer();
+  const { play, currentSong, isPlaying, toggle, isLiked, toggleLike, playlists, addToPlaylist, prefetchSong } = usePlayer();
   const active = currentSong?.id === song.id;
   const liked = isLiked(song.id);
 
@@ -32,6 +32,7 @@ const SongRow = ({ song, queue, index, compact = false }: SongRowProps) => {
           : "hover:bg-foreground/[0.03] active:scale-[0.98]"
       )}
       onClick={() => active ? toggle() : play(song, queue)}
+      onPointerDown={() => prefetchSong(song)}
     >
       {/* Track number */}
       {index !== undefined && (

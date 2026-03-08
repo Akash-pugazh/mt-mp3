@@ -49,7 +49,7 @@ const NowPlaying = () => {
   }
 
   const liked = isLiked(currentSong.id);
-  const upNext = queue.slice(queueIndex + 1, queueIndex + 4);
+  const upNext = queue.slice(queueIndex + 1);
 
   return (
     <div className="relative min-h-screen bg-background overflow-y-auto scrollbar-hide">
@@ -73,7 +73,7 @@ const NowPlaying = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        className="relative z-10 flex flex-col min-h-screen px-6 pt-4 pb-6 max-w-lg mx-auto safe-t"
+        className="relative z-10 px-6 pt-4 pb-40 max-w-lg mx-auto safe-t"
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
@@ -92,9 +92,9 @@ const NowPlaying = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.3 }}
-            className="mb-6 px-1"
+            className="mb-6 px-1 min-h-[74px]"
           >
-            <h2 className="text-[26px] font-bold font-display text-foreground tracking-tight leading-[1.15]">
+            <h2 className="text-[26px] font-bold font-display text-foreground tracking-tight leading-[1.15] truncate">
               {currentSong.title}
             </h2>
             <div className="flex items-center justify-between mt-2">
@@ -109,7 +109,7 @@ const NowPlaying = () => {
         </AnimatePresence>
 
         {/* Circular Disc */}
-        <div className="flex-1 flex items-center justify-center py-2">
+        <div className="h-[360px] flex items-center justify-center py-2">
           <motion.div
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
@@ -224,16 +224,20 @@ const NowPlaying = () => {
         </div>
 
         {/* Next Songs */}
-        {upNext.length > 0 && (
-          <div className="mt-auto">
-            <p className="text-[14px] font-semibold text-foreground/60 mb-2 px-1 font-display">Next Songs</p>
+        <div className="mt-2">
+          <p className="text-[14px] font-semibold text-foreground/60 mb-2 px-1 font-display">Next Songs</p>
+          {upNext.length > 0 ? (
             <div className="space-y-0.5">
               {upNext.map((song) => (
                 <SongRow key={song.id} song={song} queue={queue} compact />
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="rounded-xl border border-foreground/10 px-3 py-4 text-[12px] text-muted-foreground">
+              No more songs in queue
+            </div>
+          )}
+        </div>
       </motion.div>
     </div>
   );

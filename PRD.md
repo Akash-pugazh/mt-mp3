@@ -1,55 +1,58 @@
-# PRD - MassTamilan Music Application
+# PRD - mt-mp3 (Current State)
 
 ## Product Summary
-Build a music application that browses Tamil movie songs from our backend and provides player + library experience.
+Mobile-first Tamil songs app powered by an unofficial Express API wrapper around masstamilan.dev.
 
-## Current Technical Baseline (March 8, 2026)
-- Backend: Express API wrapper for masstamilan.dev, Swagger, tests, anti-403 fallback.
-- Frontend: `mobile-app/` migrated to Vite + React (mobile-first UI), replacing previous Expo React Native app.
+## Current Baseline (March 8, 2026)
+- Backend: Express + TypeScript API wrapper, Swagger docs, input validation, anti-bot fallbacks.
+- Frontend: Vite + React + Capacitor Android app (replaced older Expo path).
 
-## Core Features Implemented
-- Home discovery feed (API-first with fallback).
-- Movies tab with paginated loading.
-- Movie songs page with play-all/shuffle.
-- Search page with backend autocomplete.
-- Library with liked songs + playlist CRUD.
-- Persistent mini-player + immersive now-playing screen.
-- Playback queue with shuffle/repeat/seek.
-- Stream URL recovery via backend `download/resolve` and song-detail refresh.
-- Local persistence for likes/playlists/recent/meta via localStorage.
+## Current User Experience
+- Home discovery from backend movie/song sources
+- Movies tab with infinite fetch while scrolling
+- Movie songs screen with play-all/shuffle
+- Search autocomplete
+- Library with likes and playlist CRUD
+- Mini player + Now Playing
+- Queue playback: next/previous/shuffle/repeat/seek
 
-## Backend Contracts Used
-- `GET /api/v1/movies?source=latest-updates&page=N`
+## Playback/Networking Behavior
+- Song URLs are resolved on demand from backend endpoints.
+- Resolver is tuned for start-fast playback and progressive buffering (no intentional full-file wait).
+- Song rows prefetch stream URL on press/touch to reduce delay.
+
+## UI Stability Goals (Implemented)
+- Now Playing is scrollable.
+- Middle player/disc section is fixed-height to avoid vertical stutter during next-song transitions.
+- Full `Next Songs` list is visible via scrolling.
+
+## Backend Contracts Used by App
+- `GET /api/v1/movies?source=...&page=...`
 - `GET /api/v1/movies/:slug/songs`
 - `GET /api/v1/songs/:movieId/:songSlug`
 - `GET /api/v1/search/autocomplete?keyword=...`
 - `GET /api/v1/download/resolve?path=...`
 
-## Known Limitations
-- Full offline binary audio caching is not implemented in web runtime.
-- Large JS bundle warning exists; code-splitting can improve this.
-- No lock-screen/background transport controls in web mode.
+## Non-goals (Current)
+- Full offline binary audio cache
+- OS-level lock-screen/media transport controls
 
 ## Next Priorities
-1. Add optional IndexedDB audio cache for offline replay in web/Capacitor runtime.
-2. Add backend flattened songs feed endpoint for faster home load.
-3. Split route bundles (`NowPlaying`, `Library`, `Movies`) for smaller initial load.
+1. Add explicit buffering/loading indicator in player controls.
+2. Add route-level code splitting to reduce initial JS bundle size.
+3. Add optional IndexedDB caching strategy for replay and low-connectivity mode.
 
 ## Runbook
 ### Backend
 ```bash
+cd "C:\Users\aakas\Downloads\Test Project"
 npm install
 npm run dev
 ```
 
-### Frontend
+### Mobile app
 ```bash
-cd mobile-app
+cd "C:\Users\aakas\Downloads\Test Project\mobile-app"
 npm install
-npm run dev
-```
-
-Environment:
-```bash
-set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+npm run android:install
 ```

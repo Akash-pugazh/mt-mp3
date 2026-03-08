@@ -38,6 +38,7 @@ interface PlayerContextType {
   allSongs: Song[];
   searchSongs: (q: string) => Song[];
   registerSongs: (songs: Song[]) => void;
+  prefetchSong: (song: Song) => void;
 }
 
 const PlayerContext = createContext<PlayerContextType | null>(null);
@@ -133,6 +134,10 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     }
     return resolved;
   }, []);
+
+  const prefetchSong = useCallback((song: Song) => {
+    void resolveSongStreamUrl(song);
+  }, [resolveSongStreamUrl]);
 
   const playSong = useCallback(async (song: Song) => {
     const requestId = ++playRequestIdRef.current;
@@ -298,7 +303,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       createPlaylist: createPlaylistFn, deletePlaylist: deletePlaylistFn,
       addToPlaylist: addToPlaylistFn, removeFromPlaylist: removeFromPlaylistFn,
       getPlaylistSongs, renamePlaylist: renamePlaylistFn,
-      allSongs, searchSongs, registerSongs,
+      allSongs, searchSongs, registerSongs, prefetchSong,
     }}>
       {children}
     </PlayerContext.Provider>

@@ -50,12 +50,22 @@ if (-not (Test-Path $apkPath)) {
   throw "APK not found at $apkPath"
 }
 
-Write-Host "3) Installing on connected Android device..." -ForegroundColor Green
+Write-Host "3) Preparing USB networking (adb reverse tcp:3000 -> tcp:3000)..." -ForegroundColor Green
 $devices = (& adb devices) -join "`n"
 if ($devices -notmatch "`tdevice") {
   throw "No authorized Android device found. Check USB debugging and adb authorization."
 }
 
+adb reverse tcp:3000 tcp:3000
+
+try {
+  $null = Invoke-RestMethod -Uri "http://127.0.0.1:3000/api/v1/health" -TimeoutSec 3
+  Write-Host "Local backend health check passed at http://127.0.0.1:3000/api/v1/health" -ForegroundColor DarkGreen
+} catch {
+  Write-Host "Warning: Backend health check failed on localhost:3000. Start backend with 'npm run dev' before using the app." -ForegroundColor Yellow
+}
+
+Write-Host "4) Installing on connected Android device..." -ForegroundColor Green
 adb install -r $apkPath
 
 Write-Host "Done. Latest debug APK installed." -ForegroundColor Cyan

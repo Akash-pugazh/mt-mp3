@@ -213,10 +213,9 @@ export class MasstamilanClient {
   }
 
   private async resolveDownloadViaCurl(url: string): Promise<ResolveDownloadResult> {
+    const timeoutSec = String(Math.max(5, Math.floor(env.requestTimeoutMs / 1000)));
     const outTarget = process.platform === 'win32' ? 'NUL' : '/dev/null';
-    const args = [
-      '-L',
-      url,
+    const commonArgs = [
       '-A',
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
       '-H',
@@ -225,24 +224,30 @@ export class MasstamilanClient {
       `Referer: ${env.baseUrl}/`,
       '--compressed',
       '--max-time',
-      String(Math.max(5, Math.floor(env.requestTimeoutMs / 1000))),
+      timeoutSec,
       '-o',
       outTarget,
       '-w',
       '%{url_effective}|%{http_code}',
     ];
 
+    const attempts: string[][] = [
+      ['-I', '-L', url, ...commonArgs],
+      ['-L', '-r', '0-0', url, ...commonArgs],
+    ];
     const commands = process.platform === 'win32' ? ['curl.exe', 'curl'] : ['curl'];
-    for (const cmd of commands) {
-      try {
-        const { stdout } = await execFileAsync(cmd, args, { maxBuffer: 1024 * 1024 });
-        const [effectiveUrl, codeRaw] = stdout.trim().split('|');
-        const status = Number(codeRaw ?? '0');
-        if (effectiveUrl && /^https?:\/\//i.test(effectiveUrl)) {
-          return { location: effectiveUrl, status };
+    for (const args of attempts) {
+      for (const cmd of commands) {
+        try {
+          const { stdout } = await execFileAsync(cmd, args, { maxBuffer: 1024 * 1024 });
+          const [effectiveUrl, codeRaw] = stdout.trim().split('|');
+          const status = Number(codeRaw ?? '0');
+          if (effectiveUrl && /^https?:\/\//i.test(effectiveUrl)) {
+            return { location: effectiveUrl, status };
+          }
+        } catch {
+          // try next available curl binary or strategy
         }
-      } catch {
-        // try next available curl binary
       }
     }
 

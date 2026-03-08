@@ -8,7 +8,7 @@ import type { Movie } from "@/types/music";
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
 const fadeItem = { hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" as const } } };
 const MOVIE_SOURCE = "tamil-songs";
-const MAX_PAGES = 200;
+const MAX_PAGES = 1000;
 
 const MoviesPage = () => {
   const navigate = useNavigate();
@@ -17,8 +17,7 @@ const MoviesPage = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [stagnantPages, setStagnantPages] = useState(0);
-  const [emptyPages, setEmptyPages] = useState(0);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -29,8 +28,6 @@ const MoviesPage = () => {
         if (data.items.length > 0) {
           setMovies(data.items);
           setHasMore(true);
-          setStagnantPages(0);
-          setEmptyPages(0);
         } else {
           setMovies([]);
           setHasMore(false);
@@ -52,38 +49,18 @@ const MoviesPage = () => {
       const nextPage = page + 1;
       const data = await listMovies(MOVIE_SOURCE, nextPage);
       if (data.items.length > 0) {
-        let added = 0;
         setMovies(prev => {
           const bySlug = new Map(prev.map(item => [item.slug, item]));
           data.items.forEach(item => {
-            if (!bySlug.has(item.slug)) {
-              added += 1;
-            }
             bySlug.set(item.slug, item);
           });
           return Array.from(bySlug.values());
         });
         setPage(nextPage);
-        setEmptyPages(0);
-        if (added === 0) {
-          setStagnantPages(prev => {
-            const next = prev + 1;
-            if (next >= 8) setHasMore(false);
-            return next;
-          });
-        } else {
-          setStagnantPages(0);
-          setHasMore(nextPage < MAX_PAGES);
-        }
+        setHasMore(nextPage < MAX_PAGES);
       } else {
         setPage(nextPage);
-        setEmptyPages(prev => {
-          const next = prev + 1;
-          if (next >= 3 || nextPage >= MAX_PAGES) {
-            setHasMore(false);
-          }
-          return next;
-        });
+        setHasMore(nextPage < MAX_PAGES);
       }
     } catch {
       // Keep infinite scroll alive on transient failures; next intersection retries.
@@ -103,12 +80,27 @@ const MoviesPage = () => {
           void loadMore();
         }
       },
-      { root: null, rootMargin: "900px 0px", threshold: 0.01 },
+      { root: containerRef.current, rootMargin: "900px 0px", threshold: 0.01 },
     );
 
     observer.observe(node);
     return () => observer.disconnect();
   }, [loadMore]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const onScroll = () => {
+      const remaining = container.scrollHeight - container.scrollTop - container.clientHeight;
+      if (remaining < 600 && hasMore && !loading && !loadingMore) {
+        void loadMore();
+      }
+    };
+
+    container.addEventListener("scroll", onScroll, { passive: true });
+    return () => container.removeEventListener("scroll", onScroll);
+  }, [hasMore, loading, loadingMore, loadMore]);
 
   useEffect(() => {
     const ensureContentFilled = () => {
@@ -123,7 +115,7 @@ const MoviesPage = () => {
   }, [movies.length, hasMore, loading, loadingMore, loadMore]);
 
   return (
-    <div className="relative pb-40 min-h-screen overflow-y-auto scrollbar-hide">
+    <div ref={containerRef} className="relative pb-40 min-h-screen overflow-y-auto scrollbar-hide">
       <motion.div
         variants={stagger}
         initial="hidden"
