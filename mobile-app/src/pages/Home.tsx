@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Play, TrendingUp, Clock, Wifi, WifiOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { listMovies, getMovieSongs } from "@/lib/api";
+import { toHighQualityImage } from "@/lib/images";
 import type { Song, Movie } from "@/types/music";
 
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.04 } } };
@@ -95,7 +96,7 @@ const Home = () => {
               onClick={() => play(hero, songs)}
             >
               <div className="aspect-[2/1] relative">
-                <img src={hero.imageUrl} alt={hero.title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
+                <img src={toHighQualityImage(hero.imageUrl, 1600)} alt={hero.title} className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 right-0 p-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-foreground/40 mb-1.5">Featured</p>
@@ -124,7 +125,7 @@ const Home = () => {
                   className="flex-shrink-0 w-[130px] text-left group"
                 >
                   <div className="relative w-[130px] h-[130px] rounded-2xl overflow-hidden mb-2">
-                    <img src={song.imageUrl} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={toHighQualityImage(song.imageUrl, 900)} alt={song.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <div className="w-9 h-9 rounded-full bg-foreground/90 flex items-center justify-center">
                         <Play size={14} fill="currentColor" className="text-background ml-0.5" />

@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useRef, useCallback, useEff
 import type { Song, RepeatMode, Playlist } from "@/types/music";
 import * as cache from "@/lib/cache";
 import { resolvePlayableUrl } from "@/lib/api";
+import { toHighQualityImage } from "@/lib/images";
+import { MediaSession } from "@capgo/capacitor-media-session";
 
 interface PlayerContextType {
   currentSong: Song | null;
@@ -53,6 +55,11 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const resolvedUrlCacheRef = useRef<Map<string, string>>(new Map());
   const playRequestIdRef = useRef(0);
+  const progressRef = useRef(0);
+  const durationRef = useRef(0);
+  const nextRef = useRef<() => void>(() => {});
+  const previousRef = useRef<() => void>(() => {});
+  const lastPositionSyncRef = useRef(0);
   const [allSongs, setAllSongs] = useState<Song[]>(() => {
     const merged = Object.values(cache.getAllSongMeta());
     const seen = new Set<string>();
@@ -113,6 +120,27 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       audio.removeEventListener("ended", onEnd);
     };
   }, [repeat, shuffle, queue, queueIndex]);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (!currentSong) return;
+    if (typeof MediaMetadata === "undefined") return;
+
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: currentSong.title,
+        artist: currentSong.artist,
+        album: currentSong.movie,
+        artwork: [
+          { src: toHighQualityImage(currentSong.imageUrl, 256), sizes: "256x256", type: "image/jpeg" },
+          { src: toHighQualityImage(currentSong.imageUrl, 512), sizes: "512x512", type: "image/jpeg" },
+          { src: toHighQualityImage(currentSong.imageUrl, 1024), sizes: "1024x1024", type: "image/jpeg" },
+        ],
+      });
+    } catch {
+      // ignore metadata failures on partial media-session implementations
+    }
+  }, [currentSong]);
 
   const getNextIndex = useCallback(() => {
     if (shuffle) {
@@ -209,7 +237,8 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   }, [getNextIndex, queue, playSong]);
 
   const previous = useCallback(() => {
-    if (progress > 3 && audioRef.current) {
+    const currentTime = audioRef.current?.currentTime ?? 0;
+    if (currentTime > 3 && audioRef.current) {
       audioRef.current.currentTime = 0;
       setProgress(0);
       return;
@@ -219,12 +248,116 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setQueueIndex(idx);
       playSong(queue[idx]);
     }
-  }, [queueIndex, queue, playSong, progress]);
+  }, [queueIndex, queue, playSong]);
 
   const seek = useCallback((t: number) => {
     if (audioRef.current) audioRef.current.currentTime = t;
     setProgress(t);
   }, []);
+
+  const applyNativePlay = useCallback(() => {
+    audioRef.current?.play().catch(() => {});
+    setIsPlaying(true);
+  }, []);
+
+  const applyNativePause = useCallback(() => {
+    audioRef.current?.pause();
+    setIsPlaying(false);
+  }, []);
+
+  useEffect(() => {
+    progressRef.current = progress;
+    durationRef.current = duration;
+    nextRef.current = handleNext;
+    previousRef.current = previous;
+  }, [progress, duration, handleNext, previous]);
+
+  useEffect(() => {
+    const registerHandlers = async () => {
+      try {
+        await MediaSession.setActionHandler({ action: "play" }, () => applyNativePlay());
+        await MediaSession.setActionHandler({ action: "pause" }, () => applyNativePause());
+        await MediaSession.setActionHandler({ action: "nexttrack" }, () => nextRef.current());
+        await MediaSession.setActionHandler({ action: "previoustrack" }, () => previousRef.current());
+        await MediaSession.setActionHandler({ action: "seekbackward" }, (details) => {
+          const offset = 10;
+          const nextTime = Math.max(0, (audioRef.current?.currentTime ?? progressRef.current) - offset);
+          seek(nextTime);
+        });
+        await MediaSession.setActionHandler({ action: "seekforward" }, (details) => {
+          const offset = 10;
+          const current = audioRef.current?.currentTime ?? progressRef.current;
+          const nextTime = Math.min(durationRef.current || current + offset, current + offset);
+          seek(nextTime);
+        });
+        await MediaSession.setActionHandler({ action: "seekto" }, (details) => {
+          if (typeof details.seekTime !== "number") return;
+          seek(details.seekTime);
+        });
+      } catch {
+        // Ignore unsupported platforms or actions.
+      }
+    };
+
+    void registerHandlers();
+
+    return () => {
+      void MediaSession.setActionHandler({ action: "play" }, null).catch(() => {});
+      void MediaSession.setActionHandler({ action: "pause" }, null).catch(() => {});
+      void MediaSession.setActionHandler({ action: "nexttrack" }, null).catch(() => {});
+      void MediaSession.setActionHandler({ action: "previoustrack" }, null).catch(() => {});
+      void MediaSession.setActionHandler({ action: "seekbackward" }, null).catch(() => {});
+      void MediaSession.setActionHandler({ action: "seekforward" }, null).catch(() => {});
+      void MediaSession.setActionHandler({ action: "seekto" }, null).catch(() => {});
+    };
+  }, [applyNativePause, applyNativePlay, seek]);
+
+  useEffect(() => {
+    if (!currentSong) {
+      void MediaSession.setPlaybackState({ playbackState: "none" }).catch(() => {});
+      return;
+    }
+
+    void MediaSession.setMetadata({
+      title: currentSong.title,
+      artist: currentSong.artist,
+      album: currentSong.movie,
+      artwork: [
+        { src: toHighQualityImage(currentSong.imageUrl, 256), sizes: "256x256", type: "image/jpeg" },
+        { src: toHighQualityImage(currentSong.imageUrl, 512), sizes: "512x512", type: "image/jpeg" },
+        { src: toHighQualityImage(currentSong.imageUrl, 1024), sizes: "1024x1024", type: "image/jpeg" },
+      ],
+    }).catch(() => {});
+  }, [currentSong?.id]);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    try {
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+    } catch {
+      // ignore unsupported media session playback states
+    }
+  }, [isPlaying]);
+
+  useEffect(() => {
+    void MediaSession.setPlaybackState({
+      playbackState: isPlaying ? "playing" : "paused",
+    }).catch(() => {});
+  }, [isPlaying]);
+
+  useEffect(() => {
+    if (!currentSong) return;
+    if (!Number.isFinite(duration) || duration <= 0) return;
+    const now = Date.now();
+    if (now - lastPositionSyncRef.current < 1000) return;
+    lastPositionSyncRef.current = now;
+
+    void MediaSession.setPositionState({
+      duration,
+      playbackRate: 1,
+      position: Number.isFinite(progress) ? progress : 0,
+    }).catch(() => {});
+  }, [currentSong, duration, progress]);
 
   const setVolume = useCallback((v: number) => {
     if (audioRef.current) audioRef.current.volume = v;

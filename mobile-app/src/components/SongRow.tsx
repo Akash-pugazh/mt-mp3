@@ -3,6 +3,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { Play, Pause, Heart, MoreHorizontal, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { WaveformIndicator } from "@/components/ui/states";
+import { toHighQualityImage } from "@/lib/images";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
@@ -55,7 +56,7 @@ const SongRow = ({ song, queue, index, compact = false }: SongRowProps) => {
         "relative rounded-lg overflow-hidden flex-shrink-0",
         compact ? "w-10 h-10" : "w-12 h-12"
       )}>
-        <img src={song.imageUrl} alt={song.title} className="w-full h-full object-cover" loading="lazy" />
+        <img src={toHighQualityImage(song.imageUrl, 600)} alt={song.title} className="w-full h-full object-cover" loading="lazy" />
         <div className={cn(
           "absolute inset-0 bg-black/40 flex items-center justify-center transition-all duration-200",
           active ? "opacity-100" : "opacity-0 group-hover:opacity-100"

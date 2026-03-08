@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Play } from "lucide-react";
 import { listMovies } from "@/lib/api";
+import { toHighQualityImage } from "@/lib/images";
 import type { Movie } from "@/types/music";
 
 const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.05 } } };
@@ -144,7 +145,7 @@ const MoviesPage = () => {
                   className="cursor-pointer group"
                 >
                   <div className="relative aspect-square rounded-2xl overflow-hidden">
-                    <img src={movie.imageUrl} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={toHighQualityImage(movie.imageUrl, 1100)} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
                       {movie.year && <p className="text-[12px] text-foreground/40 font-medium tabular-nums">{movie.year}</p>}

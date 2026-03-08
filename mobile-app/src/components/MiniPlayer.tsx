@@ -2,6 +2,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { Play, Pause, SkipForward } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { toHighQualityImage } from "@/lib/images";
 
 const MiniPlayer = () => {
   const { currentSong, isPlaying, toggle, next, progress, duration } = usePlayer();
@@ -33,7 +34,7 @@ const MiniPlayer = () => {
         >
           <div className="relative flex-shrink-0">
             <img
-              src={currentSong.imageUrl}
+              src={toHighQualityImage(currentSong.imageUrl, 500)}
               alt={currentSong.title}
               className="w-11 h-11 rounded-xl object-cover ring-1 ring-foreground/[0.06]"
             />

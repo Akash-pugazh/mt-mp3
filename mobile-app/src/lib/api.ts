@@ -2,6 +2,7 @@
 // API Client — matches real backend at /api/v1
 // ============================================================
 import { API_BASE_URL, API_FALLBACK_BASE_URLS, ARTWORK_BASE_URL } from './config';
+import { buildMasstamilanArtworkUrl, DEFAULT_ARTWORK_PREVIEW } from './images';
 import type {
   ApiEnvelope, MovieListData, SongsData, AutocompleteItem,
   Song, Movie, SongItem,
@@ -115,9 +116,7 @@ function toSong(item: SongItem, fallbackMovieSlug: string): Song | null {
     artist: artists,
     movie: movieTitle,
     movieSlug: fallbackMovieSlug,
-    imageUrl: item.imageName
-      ? `${ARTWORK_BASE_URL}/${encodeURIComponent(item.imageName)}.jpg`
-      : 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
+    imageUrl: buildMasstamilanArtworkUrl(ARTWORK_BASE_URL, item.imageName),
     remoteUrl: remoteUrl ?? undefined,
     downloadUrl: remoteUrl ?? undefined,
     downloadPath: item.download128Path ?? item.download320Path,
@@ -150,7 +149,7 @@ export async function listMovies(
         const movies: Movie[] = data.data.items.map(item => ({
           slug: item.slug,
           title: item.title,
-          imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
+          imageUrl: DEFAULT_ARTWORK_PREVIEW,
         }));
         if (movies.length > 0) {
           return { items: movies, page: data.data.page, count: data.data.count };

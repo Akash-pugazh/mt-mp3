@@ -10,6 +10,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import { EmptyState } from "@/components/ui/states";
 import { useState, useCallback } from "react";
 import SongRow from "@/components/SongRow";
+import { toHighQualityImage } from "@/lib/images";
 
 const fmt = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 
@@ -58,7 +59,7 @@ const NowPlaying = () => {
         <AnimatePresence mode="wait">
           <motion.img
             key={currentSong.id}
-            src={currentSong.imageUrl}
+            src={toHighQualityImage(currentSong.imageUrl, 1800)}
             initial={{ opacity: 0, scale: 1.3 }}
             animate={{ opacity: 0.12, scale: 1.1 }}
             exit={{ opacity: 0 }}
@@ -148,7 +149,7 @@ const NowPlaying = () => {
                       radial-gradient(circle, transparent 60%, hsl(var(--foreground) / 0.03) 61%, transparent 62%)
                     `
                   }} />
-                  <img src={currentSong.imageUrl} alt={currentSong.title} className="w-full h-full object-cover" />
+                  <img src={toHighQualityImage(currentSong.imageUrl, 1400)} alt={currentSong.title} className="w-full h-full object-cover" />
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-background/80 border-2 border-foreground/5" />
 
                   {showVisualizer && isPlaying && (
