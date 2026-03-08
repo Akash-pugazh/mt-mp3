@@ -53,9 +53,11 @@ export interface SongsData {
 
 /** Autocomplete result from GET /api/v1/search/autocomplete */
 export interface AutocompleteItem {
-  n: string; // display name
-  s: string; // subtitle
-  l: string; // album slug
+  name: string;
+  subtitle: string;
+  slug: string;
+  path: string;
+  url: string;
 }
 
 // ============================================================

@@ -58,7 +58,8 @@
     font-family: 'Urbanist', system-ui, sans-serif;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     letter-spacing: 0.01em;

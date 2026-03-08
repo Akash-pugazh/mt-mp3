@@ -23,7 +23,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <PlayerProvider>
-          <div className="min-h-screen bg-background overflow-hidden">
+          <div className="min-h-screen bg-background">
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/movies" element={<MoviesPage />} />

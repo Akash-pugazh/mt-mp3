@@ -69,15 +69,15 @@ const SearchPage = () => {
               {suggestions.map((item, i) => (
                 <button
                   key={i}
-                  onClick={() => navigate(`/movies/${item.l}`)}
+                  onClick={() => navigate(`/movies/${item.slug}`)}
                   className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-foreground/[0.03] active:scale-[0.98] transition-all text-left"
                 >
                   <div className="w-10 h-10 rounded-lg bg-surface-3 flex items-center justify-center flex-shrink-0">
                     <Search size={14} className="text-muted-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold text-foreground truncate">{item.n}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{item.s}</p>
+                    <p className="text-[14px] font-semibold text-foreground truncate">{item.name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{item.subtitle}</p>
                   </div>
                 </button>
               ))}

@@ -96,10 +96,10 @@ export async function getMovieSongs(slug: string): Promise<{ title: string; song
 export async function searchAutocomplete(keyword: string): Promise<AutocompleteItem[]> {
   if (!keyword.trim()) return [];
   try {
-    const data = await fetchJson<ApiEnvelope<AutocompleteItem[]>>(
+    const data = await fetchJson<ApiEnvelope<{ count: number; items: AutocompleteItem[] }>>(
       `/api/v1/search/autocomplete?keyword=${encodeURIComponent(keyword)}`
     );
-    return data.data;
+    return data.data.items;
   } catch {
     return [];
   }
@@ -107,10 +107,10 @@ export async function searchAutocomplete(keyword: string): Promise<AutocompleteI
 
 export async function resolveDownload(path: string): Promise<string | null> {
   try {
-    const data = await fetchJson<ApiEnvelope<{ url: string }>>(
+    const data = await fetchJson<ApiEnvelope<{ location: string | null; status: number }>>(
       `/api/v1/download/resolve?path=${encodeURIComponent(path)}`
     );
-    return data.data.url;
+    return data.data.location;
   } catch {
     return null;
   }
@@ -138,10 +138,11 @@ export async function resolvePlayableUrl(song: Song): Promise<string | null> {
   if (!song.movieId || !song.songSlug) return null;
 
   try {
-    const details = await fetchJson<ApiEnvelope<SongItem>>(
+    const details = await fetchJson<ApiEnvelope<{ currentSong: SongItem | null }>>(
       `/api/v1/songs/${song.movieId}/${encodeURIComponent(song.songSlug)}`
     );
-    const item = details.data;
+    const item = details.data.currentSong;
+    if (!item) return null;
     const candidate = item.download128Path ?? item.download320Path ?? item.download128Url ?? item.download320Url;
     if (!candidate) return null;
     if (candidate.startsWith('/downloader/') || candidate.startsWith('/')) {
