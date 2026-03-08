@@ -8,8 +8,9 @@ Unofficial MassTamilan stack with:
 - Backend: Node.js + Express
 - Frontend (`mobile-app`): React web app (mobile-first UI), not Expo React Native
 
-## Backend Run
+## Run Backend (API Server)
 ```bash
+cd "C:\Users\aakas\Downloads\Test Project"
 npm install
 npm run dev
 ```
@@ -19,7 +20,18 @@ Backend URLs:
 - `http://localhost:3000/docs`
 - `http://localhost:3000/swagger.json`
 
-## Frontend Run
+## Same Network Setup (Phone + PC)
+1. Connect phone and PC to the same Wi-Fi.
+2. Find PC IPv4:
+```bash
+ipconfig
+```
+Use the IPv4 value as `<your-lan-ip>` (example: `10.154.226.141`).
+
+3. Verify backend from phone browser:
+- `http://<your-lan-ip>:3000/api/v1/health`
+
+## Run Frontend (Web/PWA Test)
 ```bash
 cd mobile-app
 npm install
@@ -30,6 +42,8 @@ Set API host for frontend:
 ```bash
 set VITE_API_BASE_URL=http://<your-lan-ip>:3000
 ```
+Then open on phone browser:
+- `http://<your-lan-ip>:8080`
 
 ## Install As Android App (Capacitor)
 App name: `mt-mp3`  
@@ -67,6 +81,10 @@ cd android
 adb devices
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
+
+After install:
+- Keep backend running on PC (`npm run dev`).
+- Open `mt-mp3` app on phone.
 
 ## Generate Release App (APK / AAB)
 1. Create keystore (one-time):
