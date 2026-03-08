@@ -179,6 +179,12 @@ export class MasstamilanClient {
       });
 
       const location = (response.headers['location'] as string) ?? null;
+      if ((response.status >= 400 || !location) && requestUrl) {
+        const curlResolved = await this.resolveDownloadViaCurl(
+          isAbsolute ? requestUrl : this.buildUrl(requestUrl),
+        );
+        if (curlResolved.location) return curlResolved;
+      }
       return {
         location,
         status: response.status,
@@ -189,6 +195,10 @@ export class MasstamilanClient {
         message?: string;
       };
       if (axiosError.response) {
+        const fallback = await this.resolveDownloadViaCurl(
+          isAbsolute ? requestUrl : this.buildUrl(requestUrl),
+        );
+        if (fallback.location) return fallback;
         return {
           location: axiosError.response.headers?.['location'] ?? null,
           status: axiosError.response.status ?? 0,
@@ -200,5 +210,42 @@ export class MasstamilanClient {
         message: (error as Error).message,
       });
     }
+  }
+
+  private async resolveDownloadViaCurl(url: string): Promise<ResolveDownloadResult> {
+    const outTarget = process.platform === 'win32' ? 'NUL' : '/dev/null';
+    const args = [
+      '-L',
+      url,
+      '-A',
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      '-H',
+      'Accept: */*',
+      '-H',
+      `Referer: ${env.baseUrl}/`,
+      '--compressed',
+      '--max-time',
+      String(Math.max(5, Math.floor(env.requestTimeoutMs / 1000))),
+      '-o',
+      outTarget,
+      '-w',
+      '%{url_effective}|%{http_code}',
+    ];
+
+    const commands = process.platform === 'win32' ? ['curl.exe', 'curl'] : ['curl'];
+    for (const cmd of commands) {
+      try {
+        const { stdout } = await execFileAsync(cmd, args, { maxBuffer: 1024 * 1024 });
+        const [effectiveUrl, codeRaw] = stdout.trim().split('|');
+        const status = Number(codeRaw ?? '0');
+        if (effectiveUrl && /^https?:\/\//i.test(effectiveUrl)) {
+          return { location: effectiveUrl, status };
+        }
+      } catch {
+        // try next available curl binary
+      }
+    }
+
+    return { location: null, status: 0 };
   }
 }
