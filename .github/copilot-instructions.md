@@ -1,92 +1,86 @@
-# Copilot Instructions for MassTamilan Express API + Mobile Player
+# Copilot Instructions for MassTamilan Express API + Mobile App
 
 ## Build, Test, and Lint Commands
 
-### Backend (Node.js/Express)
-
-- **Install dependencies:**
+### Backend (`Test Project/`)
+- Install:
   ```bash
   npm install
   ```
-- **Start in dev mode:**
+- Dev server:
   ```bash
   npm run dev
   ```
-- **Start in production:**
+- Build:
   ```bash
-  npm start
+  npm run build
   ```
-- **Lint code:**
+- Lint:
   ```bash
   npm run lint
   ```
-- **Format code:**
+- Format:
   ```bash
   npm run format
   ```
-- **Run all tests:**
+- Tests:
   ```bash
   npm test
-  ```
-- **Run Swagger integration tests:**
-  ```bash
   npm run test:swagger
-  ```
-- **Run a single test file:**
-  ```bash
-  npx jest path/to/testfile.js
+  npm run test:e2e
   ```
 
-### Mobile App (React Native + Expo)
-
-- **Install dependencies:**
+### Mobile App (`Test Project/mobile-app/`)
+- Install:
   ```bash
-  cd mobile-app
   npm install
   ```
-- **Start Expo app:**
+- Web dev:
   ```bash
-  npm run start
+  npm run dev
   ```
-- **Typecheck:**
+- Build:
   ```bash
-  npm run typecheck
+  npm run build
+  ```
+- Android install/update (required after mobile changes):
+  ```bash
+  npm run android:install
   ```
 
 ## High-Level Architecture
 
-- **Backend:**
-  - Express API wrapper for masstamilan.dev, with layered structure:
-    - `src/app.js` (entry)
-    - `src/routes/v1/masstamilan.routes.js` (routing)
-    - `src/controllers/masstamilan.controller.js` (request handling)
-    - `src/services/masstamilan.service.js` (business logic)
-    - `src/clients/masstamilan.client.js` (HTTP scraping)
-    - `src/parsers/masstamilan.parser.js` (HTML/JSON parsing)
-  - Swagger docs at `/docs` and `/swagger.json`.
-  - Centralized error handling, Zod validation, security middleware, rate limiting, and anti-403 fallback.
-  - Tests in `tests/`.
+### Backend
+- Express + TypeScript API wrapper over `masstamilan.dev`.
+- Key folders:
+  - `src/routes/`
+  - `src/controllers/`
+  - `src/services/`
+  - `src/clients/`
+  - `src/parsers/`
+- API versioning under `/api/v1`.
+- Swagger/OpenAPI exposed at `/docs` and `/swagger.json`.
+- Validation with Zod, standardized error responses, anti-bot fallback behavior.
 
-- **Mobile App:**
-  - Expo/React Native app in `mobile-app/`.
-  - Main entry: `mobile-app/App.tsx`.
-  - Tabbed UI: Home, Movies, Library.
-  - Core screens: `src/screens/app-shell.tsx`, `home-tab.tsx`, `movies-tab.tsx`, `library-tab.tsx`.
-  - Contexts: `player-context.tsx`, `library-context.tsx`.
-  - Offline-first cache: `src/services/cache.ts`.
-  - API base URL set in `src/config.ts` or via `EXPO_PUBLIC_API_BASE_URL` env var.
+### Mobile
+- Vite + React + TypeScript + Capacitor Android (not Expo).
+- Main app entry: `mobile-app/src/App.tsx`.
+- Primary pages:
+  - `src/pages/Home.tsx`
+  - `src/pages/MoviesPage.tsx`
+  - `src/pages/MovieSongsPage.tsx`
+  - `src/pages/LibraryPage.tsx`
+  - `src/pages/NowPlaying.tsx`
+- Player state/context:
+  - `src/contexts/PlayerContext.tsx`
+- Shared UI + components under `src/components/`.
 
 ## Key Conventions
-
-- **API endpoints** are versioned under `/api/v1/`.
-- **Swagger/OpenAPI** is always available at `/docs` and `/swagger.json`.
-- **Mobile app** expects backend to be running and reachable via LAN IP for real-device testing.
-- **Song playback**: First play streams and caches, subsequent plays use local cache.
-- **Error handling**: Backend uses Zod for input validation and returns consistent error shapes.
-- **Rate limiting** and anti-bot strategies are enforced in backend middleware.
-- **Testing**: Use `npm run test:swagger` for integration tests against the OpenAPI spec.
-- **Mobile cache**: Uses `expo-file-system/legacy` and AsyncStorage for persistence.
-
----
-
-This file summarizes build/test commands, architecture, and conventions for Copilot and other AI assistants. If you want to adjust coverage or add more details, let me know!
+- Keep backend contracts under `/api/v1/*`.
+- Mobile should prefer backend base URL fallbacks:
+  - `http://localhost:3000`
+  - `http://127.0.0.1:3000`
+  - `http://10.0.2.2:3000`
+- For USB Android testing, use `npm run android:install` so `adb reverse` is applied.
+- Playback is start-fast and progressive-buffering via `/api/v1/download/resolve`.
+- After any mobile code/UI change, do not stop at `npm run build`; run full Android install flow.

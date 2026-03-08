@@ -69,6 +69,25 @@ cd "C:\Users\aakas\Downloads\Test Project"
 npm run build
 ```
 
+## Free Deployment (Render)
+This backend is ready to deploy on Render's free web service tier.
+
+Files added for deployment:
+- `render.yaml`: Render blueprint with build/start commands and env defaults
+
+One-time steps:
+1. Push this repository to GitHub.
+2. Sign in to Render and choose `New +` -> `Blueprint`.
+3. Select your GitHub repo and deploy the detected `render.yaml`.
+4. After deploy completes, open:
+   - `https://<your-service>.onrender.com/api/v1/health`
+   - `https://<your-service>.onrender.com/docs`
+
+Important notes:
+- Free instances may sleep after inactivity, so the first request can be slow.
+- Keep `CORS_ORIGIN=*` for testing, then tighten it later if you deploy the frontend separately.
+- The app uses `PORT` from Render automatically; do not hardcode it.
+
 Mobile app:
 ```bash
 cd "C:\Users\aakas\Downloads\Test Project\mobile-app"
@@ -88,6 +107,18 @@ npm run build
 - Song playback resolves stream URL on demand and starts with progressive buffering behavior.
 - Song rows prefetch stream URL on touch/press for quicker perceived start.
 - Movies page loads continuously while scrolling (infinite loading behavior).
+- Pull-to-search gesture is available across app pages (opens shared search popup).
+- Route-level scroll state is preserved per page when switching tabs/routes.
+- Bottom navigation uses equal-width 4-slot layout with icon-only tabs.
+- Notification/Media session controls are integrated for playback actions.
+
+## Required After Every Frontend Change
+For mobile-app changes, always run:
+```bash
+cd "C:\Users\aakas\Downloads\Test Project\mobile-app"
+npm run android:install
+```
+This is required even if `npm run build` already passed.
 
 ## Troubleshooting
 1. Keep backend running: `npm run dev` from repo root.

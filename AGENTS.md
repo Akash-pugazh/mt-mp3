@@ -28,3 +28,7 @@ Anvil runs: diagnostics → syntax → build → typecheck → linter → tests
 - **High**: All checks passed, reviewers found nothing
 - **Medium**: Most passed, some assumptions unverifiable
 - **Low**: A check failed, needs human review
+
+## Project Note (Current)
+- Mobile stack is Vite + React + Capacitor (`mobile-app/`), not Expo.
+- After any mobile change, run `npm run android:install` from `mobile-app/`.

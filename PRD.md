@@ -11,10 +11,13 @@ Mobile-first Tamil songs app powered by an unofficial Express API wrapper around
 - Home discovery from backend movie/song sources
 - Movies tab with infinite fetch while scrolling
 - Movie songs screen with play-all/shuffle
-- Search autocomplete
+- Search autocomplete with shared popup UX
 - Library with likes and playlist CRUD
 - Mini player + Now Playing
 - Queue playback: next/previous/shuffle/repeat/seek
+- Pull-to-search gesture on major app pages
+- Route-wise scroll restoration
+- Notification bar / media-session transport controls
 
 ## Playback/Networking Behavior
 - Song URLs are resolved on demand from backend endpoints.
@@ -25,6 +28,7 @@ Mobile-first Tamil songs app powered by an unofficial Express API wrapper around
 - Now Playing is scrollable.
 - Middle player/disc section is fixed-height to avoid vertical stutter during next-song transitions.
 - Full `Next Songs` list is visible via scrolling.
+- Equal-width icon-only bottom nav layout.
 
 ## Backend Contracts Used by App
 - `GET /api/v1/movies?source=...&page=...`
@@ -35,12 +39,13 @@ Mobile-first Tamil songs app powered by an unofficial Express API wrapper around
 
 ## Non-goals (Current)
 - Full offline binary audio cache
-- OS-level lock-screen/media transport controls
+- Complete offline catalog synchronization
 
 ## Next Priorities
 1. Add explicit buffering/loading indicator in player controls.
 2. Add route-level code splitting to reduce initial JS bundle size.
 3. Add optional IndexedDB caching strategy for replay and low-connectivity mode.
+4. Add visual E2E checklist for navigation/search/player regressions.
 
 ## Runbook
 ### Backend
@@ -56,3 +61,5 @@ cd "C:\Users\aakas\Downloads\Test Project\mobile-app"
 npm install
 npm run android:install
 ```
+
+Required workflow: after any mobile change, always run `npm run android:install`.

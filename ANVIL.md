@@ -116,3 +116,8 @@ After presenting, commit changes with descriptive message.
 4. Ask user for clarification when ambiguous
 5. Keep responses focused - show results, not methodology
 6. If stuck after 2 attempts, explain and ask for help
+
+## Project Workflow Addendum
+- For changes under `mobile-app/`, verification must include:
+  1. `npm run build`
+  2. `npm run android:install`

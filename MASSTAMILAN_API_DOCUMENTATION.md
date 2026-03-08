@@ -56,6 +56,15 @@ Base: `http://localhost:3000/api/v1`
 
 Goal: provide a playable URL early so clients can start playback immediately and continue buffering progressively.
 
+## Client Integration Notes (Current)
+- Mobile client uses:
+  - `GET /api/v1/movies`
+  - `GET /api/v1/movies/:slug/songs`
+  - `GET /api/v1/search/autocomplete`
+  - `GET /api/v1/download/resolve`
+- Audio links are treated as short-lived and are resolved at play time.
+- UI uses stream-start behavior (play quickly, buffer progressively), not full-file wait.
+
 ## Reliability Notes
 - Upstream can return anti-bot pages (`403/503`).
 - Backend uses browser-like headers and curl fallback for resilience.

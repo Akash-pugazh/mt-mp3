@@ -1,6 +1,6 @@
 # Mobile App (`mobile-app`)
 
-Vite + React + Capacitor Android client for `mt-mp3`.
+Vite + React + Capacitor Android client for `MT-Mp3`.
 
 ## Stack
 - React + TypeScript + Vite
@@ -11,16 +11,20 @@ Vite + React + Capacitor Android client for `mt-mp3`.
 - Local persistence via `localStorage`
 
 ## Features
-- Tabs: Home, Search, Movies, Library, Player
+- Tabs: Home, Movies, Library, Player
 - Infinite-loading movies grid
 - Movie songs listing with play/shuffle
 - Queue-based playback with next/previous/shuffle/repeat/seek
 - Scrollable Now Playing screen with full `Next Songs`
 - Stable fixed middle player area (no vertical jump on next-song state updates)
 - Liked songs and playlists
-- Search autocomplete
+- Shared spotlight-style search popup
+- Pull-to-search gesture across Home/Movies/Library/Now Playing/Movie Songs
 - Download-link resolution via backend `download/resolve`
 - Touch/press stream prefetch for faster song start
+- Notification/MediaSession playback controls
+- Route-level scroll-position restore (per page)
+- High-quality image rendering with caching pipeline
 
 ## API Base Configuration
 Set at build/dev time when needed:
@@ -52,6 +56,17 @@ npm run android:install
 
 Use this flow for USB-connected phones.
 
+## Required After Every Change
+This project workflow is strict:
+1. Complete code/UI changes.
+2. Run:
+```bash
+npm run android:install
+```
+3. Verify the updated debug build is installed on device.
+
+Do not stop at only `npm run build`; always run `npm run android:install` for latest Android update/install.
+
 ## Android Studio Flow
 ```bash
 npm run build
@@ -63,12 +78,12 @@ npx cap open android
 1. Create keystore (one-time):
 ```bash
 cd android
-keytool -genkey -v -keystore mt-mp3-release.jks -alias mtmp3 -keyalg RSA -keysize 2048 -validity 10000
+keytool -genkey -v -keystore MT-Mp3-release.jks -alias mtmp3 -keyalg RSA -keysize 2048 -validity 10000
 ```
 
 2. Configure signing in `android/gradle.properties`:
 ```properties
-MYAPP_UPLOAD_STORE_FILE=mt-mp3-release.jks
+MYAPP_UPLOAD_STORE_FILE=MT-Mp3-release.jks
 MYAPP_UPLOAD_KEY_ALIAS=mtmp3
 MYAPP_UPLOAD_STORE_PASSWORD=your_store_password
 MYAPP_UPLOAD_KEY_PASSWORD=your_key_password
@@ -97,3 +112,4 @@ npm run test
 ## Notes
 - Playback uses resolved upstream links and is designed for start-fast + continue-buffering behavior.
 - Short-lived upstream download URLs are resolved on demand by backend.
+- Bottom nav is icon-only with equal-width 4-tab layout and active glow.
