@@ -49,6 +49,25 @@ In Android Studio:
 2. Connect phone with USB debugging enabled.
 3. Click `Run` to install on device.
 
+## Install On Mobile Without Android Studio (CLI Only)
+Prerequisites:
+- JDK 21
+- Android SDK command-line tools + platform-tools
+- USB debugging enabled on phone
+
+Terminal flow:
+```bash
+cd mobile-app
+set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+npm run build
+npx cap sync android
+
+cd android
+.\gradlew.bat assembleDebug
+adb devices
+adb install -r .\app\build\outputs\apk\debug\app-debug.apk
+```
+
 ## Backend Endpoints Used by App
 - `GET /api/v1/movies`
 - `GET /api/v1/movies/:slug/songs`
