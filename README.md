@@ -1,4 +1,4 @@
-# MassTamilan API + Music App
+# mt-mp3 (MassTamilan API + Music App)
 
 Unofficial MassTamilan stack with:
 - Express backend API wrapper (`/api/v1`) with Swagger and tests
@@ -30,6 +30,24 @@ Set API host for frontend:
 ```bash
 set VITE_API_BASE_URL=http://<your-lan-ip>:3000
 ```
+
+## Install As Android App (Capacitor)
+App name: `mt-mp3`  
+App ID: `com.akashpugazh.mtmp3`
+
+```bash
+cd mobile-app
+npm install
+set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+npm run build
+npx cap sync android
+npx cap open android
+```
+
+In Android Studio:
+1. Let Gradle sync finish.
+2. Connect phone with USB debugging enabled.
+3. Click `Run` to install on device.
 
 ## Backend Endpoints Used by App
 - `GET /api/v1/movies`

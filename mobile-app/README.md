@@ -32,6 +32,15 @@ npm install
 npm run dev
 ```
 
+## Android Install (Capacitor)
+```bash
+npm install
+set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+npm run build
+npx cap sync android
+npx cap open android
+```
+
 ## Validation
 ```bash
 npm run build
