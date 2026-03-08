@@ -68,6 +68,40 @@ adb devices
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
+## Generate Release App (APK / AAB)
+1. Create keystore (one-time):
+```bash
+cd mobile-app\android
+keytool -genkey -v -keystore mt-mp3-release.jks -alias mtmp3 -keyalg RSA -keysize 2048 -validity 10000
+```
+
+2. Add signing config in `mobile-app/android/gradle.properties`:
+```properties
+MYAPP_UPLOAD_STORE_FILE=mt-mp3-release.jks
+MYAPP_UPLOAD_KEY_ALIAS=mtmp3
+MYAPP_UPLOAD_STORE_PASSWORD=your_store_password
+MYAPP_UPLOAD_KEY_PASSWORD=your_key_password
+```
+
+3. Build web + sync Android:
+```bash
+cd mobile-app
+set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+npm run build
+npx cap sync android
+```
+
+4. Build release binaries:
+```bash
+cd android
+.\gradlew.bat assembleRelease
+.\gradlew.bat bundleRelease
+```
+
+Output files:
+- APK: `mobile-app/android/app/build/outputs/apk/release/app-release.apk`
+- AAB: `mobile-app/android/app/build/outputs/bundle/release/app-release.aab`
+
 ## Backend Endpoints Used by App
 - `GET /api/v1/movies`
 - `GET /api/v1/movies/:slug/songs`
