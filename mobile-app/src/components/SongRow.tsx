@@ -84,9 +84,9 @@ const SongRow = ({ song, queue, index, compact = false }: SongRowProps) => {
       </div>
 
       {/* Duration */}
-      {!compact && (
+      {!compact && typeof song.duration === "number" && song.duration > 0 && (
         <span className="text-[11px] text-muted-foreground/40 tabular-nums font-medium shrink-0">
-          {fmt(song.duration || 0)}
+          {fmt(song.duration)}
         </span>
       )}
 

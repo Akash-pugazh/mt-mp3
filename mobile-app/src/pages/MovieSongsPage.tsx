@@ -6,7 +6,6 @@ import { EmptyState, SkeletonSongRow } from "@/components/ui/states";
 import { motion } from "framer-motion";
 import { ChevronLeft, Play, Music, Shuffle, Loader2 } from "lucide-react";
 import { getMovieSongs } from "@/lib/api";
-import { mockMovies, mockSongs } from "@/data/mockData";
 import type { Song } from "@/types/music";
 
 const fadeItem = { hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: "easeOut" as const } } };
@@ -34,11 +33,9 @@ const MovieSongsPage = () => {
           registerSongs(data.songs);
         }
       } catch {
-        // Fallback to mock
         if (!cancelled) {
-          const movie = mockMovies.find(m => m.slug === slug);
-          setMovieTitle(movie?.title || slug || '');
-          setSongs(mockSongs.filter(s => s.movieSlug === slug));
+          setMovieTitle(slug || '');
+          setSongs([]);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -49,14 +46,12 @@ const MovieSongsPage = () => {
     return () => { cancelled = true; };
   }, [slug, registerSongs]);
 
-  const movie = mockMovies.find(m => m.slug === slug);
-
   return (
     <div className="relative pb-40 min-h-screen overflow-y-auto scrollbar-hide">
       {/* Hero art */}
       <div className="relative h-[220px] overflow-hidden">
         <img
-          src={movie?.imageUrl || songs[0]?.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop'}
+          src={songs[0]?.imageUrl || 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=400&fit=crop'}
           alt={movieTitle}
           className="w-full h-full object-cover scale-105"
         />

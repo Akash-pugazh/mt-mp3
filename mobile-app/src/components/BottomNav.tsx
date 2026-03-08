@@ -17,8 +17,8 @@ const BottomNav = () => {
   const { currentSong, isPlaying } = usePlayer();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-surface-0/95 backdrop-blur-xl border-t border-foreground/[0.04] safe-b">
-      <div className="flex items-center justify-around py-2 max-w-lg mx-auto">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 h-[74px] bg-surface-0/95 backdrop-blur-xl border-t border-foreground/[0.04] safe-b">
+      <div className="flex h-full items-center justify-around max-w-lg mx-auto">
         {tabs.map(({ path, icon: Icon, label }) => {
           const active = pathname === path || (path === "/movies" && pathname.startsWith("/movies"));
           const isPlayerTab = path === "/now-playing";

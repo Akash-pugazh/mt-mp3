@@ -1,12 +1,8 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from "react";
 import type { Song, RepeatMode, Playlist } from "@/types/music";
-import { mockSongs } from "@/data/mockData";
 import * as cache from "@/lib/cache";
 import { resolvePlayableUrl } from "@/lib/api";
 
-// ============================================================
-// Context interface
-// ============================================================
 interface PlayerContextType {
   currentSong: Song | null;
   queue: Song[];
@@ -52,14 +48,12 @@ export const usePlayer = () => {
   return ctx;
 };
 
-// ============================================================
-// Provider
-// ============================================================
 export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const resolvedUrlCacheRef = useRef<Map<string, string>>(new Map());
+  const playRequestIdRef = useRef(0);
   const [allSongs, setAllSongs] = useState<Song[]>(() => {
-    const meta = Object.values(cache.getAllSongMeta());
-    const merged = [...meta, ...mockSongs];
+    const merged = Object.values(cache.getAllSongMeta());
     const seen = new Set<string>();
     return merged.filter(song => {
       if (seen.has(song.id)) return false;
@@ -95,6 +89,7 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   useEffect(() => {
     if (!audioRef.current) {
       audioRef.current = new Audio();
+      audioRef.current.preload = "auto";
       audioRef.current.volume = volume;
     }
     const audio = audioRef.current;
@@ -129,27 +124,52 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     return repeat === "all" ? 0 : -1;
   }, [shuffle, queueIndex, queue.length, repeat]);
 
+  const resolveSongStreamUrl = useCallback(async (song: Song): Promise<string | null> => {
+    const cached = resolvedUrlCacheRef.current.get(song.id);
+    if (cached) return cached;
+    const resolved = await resolvePlayableUrl(song);
+    if (resolved) {
+      resolvedUrlCacheRef.current.set(song.id, resolved);
+    }
+    return resolved;
+  }, []);
+
   const playSong = useCallback(async (song: Song) => {
+    const requestId = ++playRequestIdRef.current;
     setCurrentSong(song);
     setDuration(song.duration || 0);
     setProgress(0);
-    setIsPlaying(true);
+    setIsPlaying(false);
     cache.addRecentPlay(song.id);
     cache.saveSongMeta(song);
     registerSongs([song]);
 
     if (audioRef.current) {
-      const streamUrl = await resolvePlayableUrl(song);
+      audioRef.current.pause();
+      audioRef.current.removeAttribute('src');
+      audioRef.current.load();
+
+      const streamUrl = await resolveSongStreamUrl(song);
       if (!streamUrl) return;
+      if (requestId !== playRequestIdRef.current) return;
       audioRef.current.src = streamUrl;
-      audioRef.current.play().catch(async () => {
-        const retryUrl = await resolvePlayableUrl(song);
+      audioRef.current.play().then(() => {
+        if (requestId === playRequestIdRef.current) {
+          setIsPlaying(true);
+        }
+      }).catch(async () => {
+        const retryUrl = await resolveSongStreamUrl(song);
         if (!retryUrl || retryUrl === streamUrl) return;
+        if (requestId !== playRequestIdRef.current) return;
         audioRef.current!.src = retryUrl;
-        await audioRef.current!.play().catch(() => {});
+        await audioRef.current!.play().then(() => {
+          if (requestId === playRequestIdRef.current) {
+            setIsPlaying(true);
+          }
+        }).catch(() => {});
       });
     }
-  }, [registerSongs]);
+  }, [registerSongs, resolveSongStreamUrl]);
 
   const play = useCallback((song?: Song, newQueue?: Song[]) => {
     if (song) {
@@ -211,7 +231,6 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     setRepeat(r => r === "off" ? "all" : r === "all" ? "one" : "off");
   }, []);
 
-  // Library
   const toggleLike = useCallback((id: string) => {
     cache.toggleLikedSong(id);
     setLikedIds(cache.getLikedSongIds());
@@ -260,6 +279,14 @@ export const PlayerProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       s.movie.toLowerCase().includes(lower)
     );
   }, [allSongs]);
+
+  useEffect(() => {
+    if (!queue.length || queueIndex < 0) return;
+    const upcoming = [queue[queueIndex + 1], queue[queueIndex + 2]].filter(Boolean) as Song[];
+    upcoming.forEach((song) => {
+      void resolveSongStreamUrl(song);
+    });
+  }, [queue, queueIndex, resolveSongStreamUrl]);
 
   return (
     <PlayerContext.Provider value={{

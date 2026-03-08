@@ -52,7 +52,7 @@ const NowPlaying = () => {
   const upNext = queue.slice(queueIndex + 1, queueIndex + 4);
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background overflow-y-auto scrollbar-hide">
       {/* Ambient BG */}
       <div className="absolute inset-0 overflow-hidden">
         <AnimatePresence mode="wait">

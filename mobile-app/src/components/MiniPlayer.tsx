@@ -19,7 +19,8 @@ const MiniPlayer = () => {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 80, opacity: 0 }}
         transition={{ type: "spring", damping: 30, stiffness: 350 }}
-        className="fixed bottom-[52px] left-2.5 right-2.5 z-40 rounded-2xl overflow-hidden bg-surface-1/90 backdrop-blur-xl border border-foreground/[0.04]"
+        className="fixed left-2.5 right-2.5 z-40 rounded-2xl overflow-hidden bg-surface-1/90 backdrop-blur-xl border border-foreground/[0.04]"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 74px)" }}
       >
         {/* Progress line */}
         <div className="relative h-[2px] bg-foreground/5">

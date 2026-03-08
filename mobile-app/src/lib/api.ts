@@ -1,7 +1,7 @@
 // ============================================================
 // API Client — matches real backend at /api/v1
 // ============================================================
-import { API_BASE_URL, ARTWORK_BASE_URL } from './config';
+import { API_BASE_URL, API_FALLBACK_BASE_URLS, ARTWORK_BASE_URL } from './config';
 import type {
   ApiEnvelope, MovieListData, SongsData, AutocompleteItem,
   Song, Movie, SongItem,
@@ -15,15 +15,26 @@ class ApiError extends Error {
 }
 
 async function fetchJson<T>(path: string): Promise<T> {
-  const url = `${API_BASE_URL}${path}`;
-  const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+  const bases = [API_BASE_URL, ...API_FALLBACK_BASE_URLS].filter(Boolean);
+  let lastError: Error | null = null;
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new ApiError(res.status, `API ${res.status}: ${body}`);
+  for (const base of bases) {
+    const url = `${base}${path}`;
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (!res.ok) {
+        const body = await res.text();
+        lastError = new ApiError(res.status, `API ${res.status}: ${body}`);
+        continue;
+      }
+
+      return (await res.json()) as T;
+    } catch (err) {
+      lastError = err as Error;
+    }
   }
 
-  return (await res.json()) as T;
+  throw lastError ?? new Error('API request failed');
 }
 
 // ── Mapper: SongItem → Song ──
@@ -58,25 +69,43 @@ function toSong(item: SongItem, fallbackMovieSlug: string): Song | null {
 
 // ── Public API ──
 
-export type MovieSource = 'latest-updates' | 'tamil-songs' | 'movie-index';
+export type MovieSource = 'latest-updates' | 'tamil-songs';
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise(resolve => setTimeout(resolve, ms));
+}
 
 export async function listMovies(
   source: MovieSource = 'latest-updates',
   page = 1
 ): Promise<{ items: Movie[]; page: number; count: number }> {
-  try {
-    const data = await fetchJson<ApiEnvelope<MovieListData>>(
-      `/api/v1/movies?source=${source}&page=${page}`
-    );
-    const movies: Movie[] = data.data.items.map(item => ({
-      slug: item.slug,
-      title: item.title,
-      imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
-    }));
-    return { items: movies, page: data.data.page, count: data.data.count };
-  } catch {
-    return { items: [], page: 1, count: 0 };
+  const sources: MovieSource[] = source === 'latest-updates'
+    ? ['latest-updates', 'tamil-songs']
+    : ['tamil-songs', 'latest-updates'];
+
+  for (const src of sources) {
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      try {
+        const data = await fetchJson<ApiEnvelope<MovieListData>>(
+          `/api/v1/movies?source=${src}&page=${page}`
+        );
+        const movies: Movie[] = data.data.items.map(item => ({
+          slug: item.slug,
+          title: item.title,
+          imageUrl: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=400&fit=crop',
+        }));
+        if (movies.length > 0) {
+          return { items: movies, page: data.data.page, count: data.data.count };
+        }
+      } catch {
+        if (attempt === 0) {
+          await sleep(250);
+        }
+      }
+    }
   }
+
+  return { items: [], page: 1, count: 0 };
 }
 
 export async function getMovieSongs(slug: string): Promise<{ title: string; songs: Song[] }> {
