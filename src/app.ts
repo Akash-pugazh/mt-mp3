@@ -1,4 +1,4 @@
-import './types/express.js';
+/// <reference path="./types/express.d.ts" />
 import express from 'express';
 import type { Request, Response, RequestHandler, ErrorRequestHandler } from 'express';
 import helmet from 'helmet';

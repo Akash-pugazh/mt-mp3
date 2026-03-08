@@ -1,5 +1,5 @@
-const request = require('supertest');
-const { app } = require('../../src/app');
+import request from 'supertest';
+import { app } from '../../src/app.js';
 
 describe('Swagger/OpenAPI docs', () => {
   test('GET /swagger.json returns valid OpenAPI document shape', async () => {
@@ -16,6 +16,6 @@ describe('Swagger/OpenAPI docs', () => {
   test('GET /docs serves swagger UI html', async () => {
     const response = await request(app).get('/docs/');
     expect(response.status).toBe(200);
-    expect(response.text).toContain('Swagger UI');
+    expect(response.text).toContain('swagger-ui');
   });
 });
