@@ -23,6 +23,99 @@ Backend endpoints:
 - `http://localhost:3000/swagger.json`
 - `http://localhost:3000/api/v1/health`
 
+## Local Production API Setup
+This is the recommended way to run the scraper backend reliably, because the upstream source is blocking cloud/datacenter hosts like Render.
+
+Files added for local hosting:
+- `Dockerfile`
+- `compose.yaml`
+- `.env.local.example`
+- `scripts/start-api-local.ps1`
+- `scripts/docker-up.ps1`
+- `scripts/start-cloudflare-tunnel.ps1`
+- `scripts/show-health.ps1`
+
+### Option A: Run directly on your machine
+```bash
+cd "C:\Users\aakas\Downloads\Test Project"
+copy .env.local.example .env.local
+powershell -ExecutionPolicy Bypass -File .\scripts\start-api-local.ps1
+```
+
+### Option B: Run in Docker
+Requirements:
+- Docker Desktop installed and running
+
+```bash
+cd "C:\Users\aakas\Downloads\Test Project"
+copy .env.local.example .env.local
+powershell -ExecutionPolicy Bypass -File .\scripts\docker-up.ps1
+```
+
+Health check:
+```bash
+powershell -ExecutionPolicy Bypass -File .\scripts\show-health.ps1
+```
+
+### Expose your local API for free
+Requirements:
+- Your API already running on `http://127.0.0.1:3000`
+
+```bash
+cd "C:\Users\aakas\Downloads\Test Project"
+powershell -ExecutionPolicy Bypass -File .\scripts\start-cloudflare-tunnel.ps1
+```
+
+This downloads `cloudflared` locally into `.tools/` and starts a free Cloudflare Quick Tunnel. Use the printed `https://...trycloudflare.com` URL as your mobile app backend base URL.
+
+### Suggested production flow
+1. Start API locally using Docker or `start-api-local.ps1`.
+2. Verify `http://127.0.0.1:3000/api/v1/health`.
+3. Start Cloudflare tunnel.
+4. Put the tunnel URL into the mobile app as `VITE_API_BASE_URL` for builds, or configure the app to use that URL directly for testing.
+
+## Linux Mint Zero-to-Running Setup
+This is the simplest path if you want the backend to run from a Linux Mint machine with nothing preinstalled.
+
+Scripts:
+- `scripts/linux/setup-machine.sh`
+- `scripts/linux/start-api.sh`
+- `scripts/linux/start-tunnel.sh`
+- `scripts/linux/deploy-local-api.sh`
+- `scripts/linux/stop-api.sh`
+- `scripts/linux/stop-tunnel.sh`
+
+One command to install dependencies, start the API, verify health, and expose it publicly:
+```bash
+cd /path/to/mt-mp3
+chmod +x scripts/linux/*.sh
+./scripts/linux/deploy-local-api.sh
+```
+
+What it does:
+1. Installs Node.js 22 and required system packages
+2. Downloads `cloudflared` into `.tools/cloudflared/`
+3. Creates `.env.local` if missing
+4. Installs npm dependencies
+5. Builds and starts the API in the background
+6. Starts a free Cloudflare Quick Tunnel in the background
+7. Prints the public `https://...trycloudflare.com` URL
+
+Useful commands:
+```bash
+./scripts/linux/start-api.sh
+./scripts/linux/start-tunnel.sh
+./scripts/linux/stop-api.sh
+./scripts/linux/stop-tunnel.sh
+tail -f logs/api.log
+tail -f logs/cloudflared.log
+```
+
+Important notes:
+- The quick tunnel URL is temporary and changes when the tunnel restarts.
+- The API runs from your machine, which is the point: it avoids the cloud-IP blocking problem you hit on Render.
+- If you reboot the Linux Mint machine, just run `./scripts/linux/deploy-local-api.sh` again.
+
 ## Mobile App Setup (Web)
 ```bash
 cd "C:\Users\aakas\Downloads\Test Project\mobile-app"

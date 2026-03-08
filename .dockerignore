@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.git
+.github
+.idea
+.vscode
+mobile-app
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.log
+.env
+.env.local
+.env.*.local
