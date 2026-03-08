@@ -82,6 +82,12 @@ adb devices
 adb install -r .\app\build\outputs\apk\debug\app-debug.apk
 ```
 
+One-command installer (from `mobile-app`):
+```bash
+set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+npm run android:install
+```
+
 After install:
 - Keep backend running on PC (`npm run dev`).
 - Open `mt-mp3` app on phone.
