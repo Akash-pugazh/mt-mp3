@@ -1,60 +1,43 @@
-# Mobile App (React Native + Expo)
+# Mobile App (Vite + React)
 
-Cross-platform offline-first Tamil music player connected to the local Express API from this repository.
+This folder now contains the primary app UI (mobile-first web app), replacing the old Expo React Native implementation.
 
-## Active UX
+## Stack
+- React + TypeScript + Vite
+- Tailwind + shadcn/ui
+- Framer Motion
+- React Router
+- Local persistence with `localStorage`
 
-- Tabbed shell: `Home`, `Movies`, `Library`
-- Persistent mini player
-- Infinite movie/list loading
-- Movie -> songs drill-down
-- Liked songs + playlist management
-
-## Playback and Cache Behavior
-
-- First listen: stream remote URL and cache file in background.
-- Next listens: use local cached file when present.
-- If remote signed URLs expire, app re-fetches fresh song URLs through backend API flows.
-
-## Tech Stack
-
-- Expo SDK 54
-- React Native 0.81
-- React 19
-- `expo-av` for playback
-- `expo-file-system/legacy` for file cache ops
-- AsyncStorage for library/cache index persistence
-
-## Setup
-
-```bash
-cd mobile-app
-npm install
-npm run start
-```
+## Features
+- Tabs: Home, Search, Movies, Library, Player
+- Movie list pagination and movie-song browsing
+- Playback queue, mini-player, now-playing controls
+- Shuffle/repeat/seek
+- Liked songs and playlists
+- Backend autocomplete search
+- Download-link resolution for expiring upstream links
 
 ## API Configuration
-
-Set API host in `src/config.ts` or env:
-
+Set backend base URL:
 ```bash
-set EXPO_PUBLIC_API_BASE_URL=http://<your-lan-ip>:3000
+set VITE_API_BASE_URL=http://localhost:3000
 ```
 
-Device rules:
+Default fallback: `http://localhost:3000`
 
-- Android emulator: `http://10.0.2.2:3000`
-- iOS simulator: `http://localhost:3000`
-- Physical device: `http://<your-lan-ip>:3000`
+## Development
+```bash
+npm install
+npm run dev
+```
 
 ## Validation
-
 ```bash
-npm run typecheck
+npm run build
+npm test
 ```
 
-## Known Gaps
-
-- No OS lockscreen/notification media controls yet.
-- No download manager screen yet.
-- No cache eviction settings UI yet.
+## Notes
+- App resolves playback URLs through backend endpoints so short-lived source links are refreshed.
+- LocalStorage is used for library persistence and song metadata caching.

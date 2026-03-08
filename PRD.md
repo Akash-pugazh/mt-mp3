@@ -1,155 +1,55 @@
-# PRD - MassTamilan Cross-Platform Offline Player
+# PRD - MassTamilan Music Application
 
-## 1. Product Summary
+## Product Summary
+Build a music application that browses Tamil movie songs from our backend and provides player + library experience.
 
-Build a cross-platform app that lets users browse Tamil movie songs, stream them, and automatically cache songs for offline replay.
+## Current Technical Baseline (March 8, 2026)
+- Backend: Express API wrapper for masstamilan.dev, Swagger, tests, anti-403 fallback.
+- Frontend: `mobile-app/` migrated to Vite + React (mobile-first UI), replacing previous Expo React Native app.
 
-Core behavior:
+## Core Features Implemented
+- Home discovery feed (API-first with fallback).
+- Movies tab with paginated loading.
+- Movie songs page with play-all/shuffle.
+- Search page with backend autocomplete.
+- Library with liked songs + playlist CRUD.
+- Persistent mini-player + immersive now-playing screen.
+- Playback queue with shuffle/repeat/seek.
+- Stream URL recovery via backend `download/resolve` and song-detail refresh.
+- Local persistence for likes/playlists/recent/meta via localStorage.
 
-- First listen: stream + download.
-- Next listens: prefer cached local file.
+## Backend Contracts Used
+- `GET /api/v1/movies?source=latest-updates&page=N`
+- `GET /api/v1/movies/:slug/songs`
+- `GET /api/v1/songs/:movieId/:songSlug`
+- `GET /api/v1/search/autocomplete?keyword=...`
+- `GET /api/v1/download/resolve?path=...`
 
-## 2. Objectives
+## Known Limitations
+- Full offline binary audio caching is not implemented in web runtime.
+- Large JS bundle warning exists; code-splitting can improve this.
+- No lock-screen/background transport controls in web mode.
 
-- Reliable playback from unstable upstream links.
-- Fast browsing of recent movies and songs.
-- Local-player-like UX with persistent library state.
+## Next Priorities
+1. Add optional IndexedDB audio cache for offline replay in web/Capacitor runtime.
+2. Add backend flattened songs feed endpoint for faster home load.
+3. Split route bundles (`NowPlaying`, `Library`, `Movies`) for smaller initial load.
 
-## 3. In Scope
-
-- Backend API wrapper over `masstamilan.dev`.
-- Mobile app with Home/Movies/Library tabs.
-- Song playback, queue, progress controls.
-- Liked songs and playlists.
-- Offline cache-first replay.
-
-## 4. Out of Scope (Current Phase)
-
-- User accounts and cloud sync.
-- Social sharing.
-- Subscription/payments.
-- DRM protections.
-
-## 5. Completed Work
-
-### 5.1 Backend
-
-- Layered architecture: routes/controllers/services/clients/parsers.
-- Zod validation and centralized error handling.
-- Security middleware + rate limiting + request IDs.
-- Swagger at `/docs` and `/swagger.json`.
-- Tests for parser and Swagger routes.
-- Anti-403 strategy with browser headers + curl fallback.
-
-### 5.2 Mobile
-
-- Expo app bootstrapped and stabilized on SDK 54 dependencies.
-- Offline-first cache service implemented.
-- Tabbed shell implemented.
-- Infinite list loading for movie-driven song discovery.
-- Library features implemented (liked songs + playlists).
-
-### 5.3 UI Rollback Baseline (March 7, 2026)
-
-- Reverted the last two immersive UI checkpoints.
-- Current baseline is stable tabbed player UX.
-
-## 6. Current Architecture
-
-### 6.1 Backend
-
-- `src/app.js`
-- `src/routes/v1/masstamilan.routes.js`
-- `src/controllers/masstamilan.controller.js`
-- `src/services/masstamilan.service.js`
-- `src/clients/masstamilan.client.js`
-- `src/parsers/masstamilan.parser.js`
-
-### 6.2 Mobile
-
-- `mobile-app/App.tsx`
-- `mobile-app/src/screens/app-shell.tsx`
-- `mobile-app/src/screens/home-tab.tsx`
-- `mobile-app/src/screens/movies-tab.tsx`
-- `mobile-app/src/screens/library-tab.tsx`
-- `mobile-app/src/context/player-context.tsx`
-- `mobile-app/src/context/library-context.tsx`
-- `mobile-app/src/services/cache.ts`
-
-## 7. Functional Requirements
-
-- List recent movies and songs.
-- Open movie details and play songs.
-- Auto-download on first playback.
-- Cache-first replay afterward.
-- Manage liked songs and playlists.
-
-## 8. Non-Functional Requirements
-
-- API input validation and bounded rate usage.
-- Resilient handling of upstream 403/token expiry.
-- Maintainable, typed mobile codebase.
-- Documentation aligned with runtime behavior.
-
-## 9. Known Limitations
-
-- No single flattened "all songs" backend feed endpoint yet.
-- No background transport controls yet.
-- No cache management UI yet.
-
-## 10. Next Phases
-
-### Phase A
-
-- Add `GET /api/v1/songs/feed` (flattened default feed).
-- Backend-side metadata cache for feed speed.
-- Mobile retry/banner UX for transient network failures.
-
-### Phase B
-
-- Download manager screen.
-- Recently played section.
-- Cache cleanup controls.
-
-### Phase C
-
-- Lock screen/media notification controls.
-- Advanced now-playing screen on top of stable baseline.
-- Lightweight telemetry.
-
-## 11. Acceptance Criteria
-
-- Backend serves Swagger and core API routes.
-- Mobile launches and plays songs from backend.
-- Cache is created after first listen and reused on replay.
-- Movies tab pagination works.
-- Library state persists for likes and playlists.
-
-## 12. Runbook
-
+## Runbook
 ### Backend
-
 ```bash
 npm install
 npm run dev
 ```
 
-### Mobile
-
+### Frontend
 ```bash
 cd mobile-app
 npm install
-npm run start
+npm run dev
 ```
 
-Use LAN IP for real-device testing in `EXPO_PUBLIC_API_BASE_URL`.
-
-## 13. Change Log
-
-- Added complete Express API wrapper and Swagger docs.
-- Added parser/swagger tests.
-- Added anti-403 curl fallback path.
-- Added cross-platform Expo app with offline cache behavior.
-- Added tabbed UX with infinite lists and library features.
-- Stabilized dependencies on Expo SDK 54 stack.
-- Reverted last two immersive UI checkpoints; restored stable tabbed baseline.
+Environment:
+```bash
+set VITE_API_BASE_URL=http://<your-lan-ip>:3000
+```
