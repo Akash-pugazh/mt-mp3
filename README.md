@@ -42,7 +42,7 @@ copy .env.local.example .env.local
 powershell -ExecutionPolicy Bypass -File .\scripts\start-api-local.ps1
 ```
 
-### Option B: Run in Docker
+### Option B: Run in Docker Compose
 Requirements:
 - Docker Desktop installed and running
 
@@ -52,26 +52,24 @@ copy .env.local.example .env.local
 powershell -ExecutionPolicy Bypass -File .\scripts\docker-up.ps1
 ```
 
+This starts:
+- `api`: your backend on `http://127.0.0.1:3000`
+- `tunnel`: a Cloudflare Quick Tunnel pointing to `http://api:3000`
+
+To print the current public URL again:
+```bash
+powershell -ExecutionPolicy Bypass -File .\scripts\show-tunnel-url.ps1
+```
+
 Health check:
 ```bash
 powershell -ExecutionPolicy Bypass -File .\scripts\show-health.ps1
 ```
 
-### Expose your local API for free
-Requirements:
-- Your API already running on `http://127.0.0.1:3000`
-
-```bash
-cd "C:\Users\aakas\Downloads\Test Project"
-powershell -ExecutionPolicy Bypass -File .\scripts\start-cloudflare-tunnel.ps1
-```
-
-This downloads `cloudflared` locally into `.tools/` and starts a free Cloudflare Quick Tunnel. Use the printed `https://...trycloudflare.com` URL as your mobile app backend base URL.
-
 ### Suggested production flow
-1. Start API locally using Docker or `start-api-local.ps1`.
+1. Start API locally using Docker Compose or `start-api-local.ps1`.
 2. Verify `http://127.0.0.1:3000/api/v1/health`.
-3. Start Cloudflare tunnel.
+3. Get the current `https://...trycloudflare.com` URL.
 4. Put the tunnel URL into the mobile app as `VITE_API_BASE_URL` for builds, or configure the app to use that URL directly for testing.
 
 ## Linux Mint Zero-to-Running Setup
@@ -79,11 +77,53 @@ This is the simplest path if you want the backend to run from a Linux Mint machi
 
 Scripts:
 - `scripts/linux/setup-machine.sh`
+- `scripts/linux/deploy-docker-compose.sh`
 - `scripts/linux/start-api.sh`
 - `scripts/linux/start-tunnel.sh`
 - `scripts/linux/deploy-local-api.sh`
 - `scripts/linux/stop-api.sh`
 - `scripts/linux/stop-tunnel.sh`
+- `scripts/linux/show-tunnel-url.sh`
+
+## Single Docker Compose Flow
+If Docker is available, use this same compose stack on Windows or Linux:
+
+```bash
+cp .env.local.example .env.local
+docker compose up -d --build
+```
+
+Services:
+- `api`
+- `tunnel`
+
+Get the current tunnel URL:
+
+Windows:
+```bash
+powershell -ExecutionPolicy Bypass -File .\scripts\show-tunnel-url.ps1
+```
+
+Linux:
+```bash
+chmod +x scripts/linux/show-tunnel-url.sh
+./scripts/linux/show-tunnel-url.sh
+```
+
+Stop everything:
+```bash
+docker compose down
+```
+
+Fresh Linux Mint machine with nothing installed:
+```bash
+cd /path/to/mt-mp3
+chmod +x scripts/linux/*.sh
+./scripts/linux/deploy-docker-compose.sh
+```
+
+Note:
+- The Docker install step may require logging out and back in before non-sudo `docker` works, depending on group membership refresh.
 
 One command to install dependencies, start the API, verify health, and expose it publicly:
 ```bash
@@ -105,6 +145,7 @@ Useful commands:
 ```bash
 ./scripts/linux/start-api.sh
 ./scripts/linux/start-tunnel.sh
+./scripts/linux/show-tunnel-url.sh
 ./scripts/linux/stop-api.sh
 ./scripts/linux/stop-tunnel.sh
 tail -f logs/api.log

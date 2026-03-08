@@ -12,6 +12,7 @@
     "docker:run": "docker run --rm -p 3000:3000 --env-file .env.local masstamilan-express-api",
     "docker:up": "docker compose up -d --build",
     "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "format": "prettier --write .",

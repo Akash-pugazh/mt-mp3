@@ -3,9 +3,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: masstamilan-express-api
     ports:
       - "3000:3000"
     restart: unless-stopped
     env_file:
       - .env.local
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      - api
+    command: tunnel --url http://api:3000 --no-autoupdate

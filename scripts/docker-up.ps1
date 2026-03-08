@@ -17,6 +17,9 @@ Push-Location $projectRoot
 try {
   docker compose up -d --build
   Write-Host "API is starting on http://127.0.0.1:3000" -ForegroundColor Green
+  Write-Host "Fetching Cloudflare tunnel URL..." -ForegroundColor Cyan
+  Start-Sleep -Seconds 8
+  powershell -ExecutionPolicy Bypass -File (Join-Path $projectRoot "scripts\show-tunnel-url.ps1")
 } finally {
   Pop-Location
 }
