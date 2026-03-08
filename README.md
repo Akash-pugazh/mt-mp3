@@ -87,6 +87,7 @@ Important notes:
 - Free instances may sleep after inactivity, so the first request can be slow.
 - Keep `CORS_ORIGIN=*` for testing, then tighten it later if you deploy the frontend separately.
 - The app uses `PORT` from Render automatically; do not hardcode it.
+- The Render build installs dev dependencies explicitly because `tsc` and `@types/node` are needed during build time.
 
 Mobile app:
 ```bash

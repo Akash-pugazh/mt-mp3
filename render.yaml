@@ -3,14 +3,12 @@ services:
     name: masstamilan-express-api
     runtime: node
     plan: free
-    buildCommand: npm ci && npm run build
-    startCommand: npm start
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: NODE_ENV=production npm start
     healthCheckPath: /api/v1/health
     envVars:
       - key: NODE_VERSION
         value: 22
-      - key: NODE_ENV
-        value: production
       - key: HOST
         value: 0.0.0.0
       - key: LOG_LEVEL
