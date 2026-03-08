@@ -33,8 +33,9 @@ $env:VITE_API_BASE_URL="http://localhost:3000"
 ```
 
 Runtime defaults:
-- Primary: `http://localhost:3000`
-- Fallbacks: `http://127.0.0.1:3000`, `http://10.0.2.2:3000`
+- Production default: `https://masstamilan-express-api.onrender.com`
+- Development default: `http://localhost:3000`
+- Development fallbacks: `http://127.0.0.1:3000`, `http://10.0.2.2:3000`
 
 ## Development
 ```bash
@@ -88,6 +89,12 @@ MYAPP_UPLOAD_KEY_ALIAS=mtmp3
 MYAPP_UPLOAD_STORE_PASSWORD=your_store_password
 MYAPP_UPLOAD_KEY_PASSWORD=your_key_password
 ```
+
+You can also provide the same values via environment variables for local release builds:
+- `MT_MP3_UPLOAD_STORE_FILE`
+- `MT_MP3_UPLOAD_KEY_ALIAS`
+- `MT_MP3_UPLOAD_STORE_PASSWORD`
+- `MT_MP3_UPLOAD_KEY_PASSWORD`
 
 3. Build release artifacts:
 ```bash

@@ -7,7 +7,7 @@ $androidDir = Join-Path $projectRoot "android"
 $apkPath = Join-Path $androidDir "app\build\outputs\apk\debug\app-debug.apk"
 
 if (-not $env:VITE_API_BASE_URL) {
-  Write-Host "VITE_API_BASE_URL is not set. Using existing value from build config/defaults." -ForegroundColor Yellow
+  Write-Host "VITE_API_BASE_URL is not set. Development builds will use localhost defaults from app config." -ForegroundColor Yellow
 }
 
 # Prefer local JDK21 path used in this workspace; fallback to installed JDKs

@@ -1,5 +1,5 @@
 const DEFAULT_UNSPLASH_IMAGE =
-commi  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=100&w=1600&h=1600&dpr=3';
+  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?auto=format&fit=crop&q=100&w=1600&h=1600&dpr=3';
 
 export const DEFAULT_ARTWORK_PREVIEW = DEFAULT_UNSPLASH_IMAGE;
 export const DEFAULT_ARTWORK_WIDE =
