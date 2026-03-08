@@ -63,7 +63,10 @@ export class MasstamilanClient {
     throw lastError ?? new Error('curl execution failed');
   }
 
-  async fetchHtml(path: string, query?: Record<string, string | number | undefined>): Promise<string> {
+  async fetchHtml(
+    path: string,
+    query?: Record<string, string | number | undefined>,
+  ): Promise<string> {
     try {
       const response = await httpClient.get<string>(path, {
         params: query,
@@ -72,7 +75,10 @@ export class MasstamilanClient {
 
       if (this.isCloudflareChallenge(response.data)) {
         const url = this.buildUrl(path, query);
-        const html = await this.fetchViaCurl(url, 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+        const html = await this.fetchViaCurl(
+          url,
+          'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        );
 
         if (this.isCloudflareChallenge(html)) {
           throw new AppError('Source blocked by anti-bot challenge', 503, { path });
@@ -91,7 +97,10 @@ export class MasstamilanClient {
       if (status === 403 || status === 503) {
         try {
           const url = this.buildUrl(path, query);
-          const html = await this.fetchViaCurl(url, 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8');
+          const html = await this.fetchViaCurl(
+            url,
+            'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          );
 
           if (this.isCloudflareChallenge(html)) {
             throw new AppError('Source blocked by anti-bot challenge', 503, { path });
@@ -116,7 +125,10 @@ export class MasstamilanClient {
     }
   }
 
-  async fetchJson(path: string, query?: Record<string, string | number | undefined>): Promise<unknown> {
+  async fetchJson(
+    path: string,
+    query?: Record<string, string | number | undefined>,
+  ): Promise<unknown> {
     try {
       const response = await httpClient.get(path, {
         params: query,
@@ -154,7 +166,11 @@ export class MasstamilanClient {
 
   async resolveDownloadPath(pathOrUrl: string): Promise<ResolveDownloadResult> {
     const isAbsolute = /^https?:\/\//i.test(pathOrUrl);
-    const requestUrl = isAbsolute ? pathOrUrl : pathOrUrl.startsWith('/') ? pathOrUrl : `/${pathOrUrl}`;
+    const requestUrl = isAbsolute
+      ? pathOrUrl
+      : pathOrUrl.startsWith('/')
+        ? pathOrUrl
+        : `/${pathOrUrl}`;
 
     try {
       const response = await httpClient.get(requestUrl, {
@@ -168,7 +184,10 @@ export class MasstamilanClient {
         status: response.status,
       };
     } catch (error) {
-      const axiosError = error as { response?: { headers?: Record<string, string>; status?: number }; message?: string };
+      const axiosError = error as {
+        response?: { headers?: Record<string, string>; status?: number };
+        message?: string;
+      };
       if (axiosError.response) {
         return {
           location: axiosError.response.headers?.['location'] ?? null,

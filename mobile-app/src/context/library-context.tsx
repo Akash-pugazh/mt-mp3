@@ -149,9 +149,7 @@ export function LibraryProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getSongsByIds = (songIds: string[]): AppSong[] =>
-    songIds
-      .map((songId) => songCatalog[songId])
-      .filter((song): song is AppSong => Boolean(song));
+    songIds.map((songId) => songCatalog[songId]).filter((song): song is AppSong => Boolean(song));
 
   const value = useMemo<LibraryContextValue>(
     () => ({

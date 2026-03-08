@@ -13,7 +13,11 @@ export const movieListQuerySchema = z
   })
   .superRefine((value, ctx) => {
     if (value.source === 'tag' && !value.letter) {
-      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['letter'], message: 'letter is required' });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['letter'],
+        message: 'letter is required',
+      });
     }
 
     if (value.source === 'year' && !value.year) {

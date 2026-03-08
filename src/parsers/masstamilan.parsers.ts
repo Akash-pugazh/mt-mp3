@@ -167,8 +167,8 @@ export function parseAlbumPageHtml(html: string, slug: string, baseUrl: string):
   for (const track of albumTracks) {
     const baseSong: SongRow | undefined = normalizedTitleMap.get(track.title.toLowerCase().trim());
     const baseSongDefaults = baseSong ?? {
-      movieId: movieId ?? null as number | null,
-      songSlug: '',
+      movieId: movieId ?? (null as number | null),
+      songSlug: null,
       title: track.title,
       songPagePath: null as string | null,
       songPageUrl: null as string | null,
@@ -192,19 +192,21 @@ export function parseAlbumPageHtml(html: string, slug: string, baseUrl: string):
 
   if (songs.length === 0) {
     songs.push(
-      ...songRows.map((row): SongItem => ({
-        movieId: row.movieId,
-        songSlug: row.songSlug,
-        title: row.title,
-        songPagePath: row.songPagePath,
-        songPageUrl: row.songPageUrl,
-        download128Path: row.download128Path,
-        download320Path: row.download320Path,
-        artists: null,
-        movieTitle: null,
-        imageName: null,
-        playerDownloadPath: null,
-      })),
+      ...songRows.map(
+        (row): SongItem => ({
+          movieId: row.movieId,
+          songSlug: row.songSlug,
+          title: row.title,
+          songPagePath: row.songPagePath,
+          songPageUrl: row.songPageUrl,
+          download128Path: row.download128Path,
+          download320Path: row.download320Path,
+          artists: null,
+          movieTitle: null,
+          imageName: null,
+          playerDownloadPath: null,
+        }),
+      ),
     );
   }
 
@@ -216,20 +218,18 @@ export function parseAlbumPageHtml(html: string, slug: string, baseUrl: string):
       download128Path: song.download128Path ?? fallbackById?.download128Path ?? null,
       download320Path: song.download320Path ?? fallbackById?.download320Path ?? null,
       download128Url:
-        song.download128Path ?? fallbackById?.download128Path
+        (song.download128Path ?? fallbackById?.download128Path)
           ? toAbsolute(baseUrl, (song.download128Path ?? fallbackById?.download128Path)!)
           : null,
       download320Url:
-        song.download320Path ?? fallbackById?.download320Path
+        (song.download320Path ?? fallbackById?.download320Path)
           ? toAbsolute(baseUrl, (song.download320Path ?? fallbackById?.download320Path)!)
           : null,
     };
   });
 
-  const zip128Path =
-    $('a[href^="/downloader/"][href*="/zip128/"]').first().attr('href') ?? null;
-  const zip320Path =
-    $('a[href^="/downloader/"][href*="/zip320/"]').first().attr('href') ?? null;
+  const zip128Path = $('a[href^="/downloader/"][href*="/zip128/"]').first().attr('href') ?? null;
+  const zip320Path = $('a[href^="/downloader/"][href*="/zip320/"]').first().attr('href') ?? null;
 
   return {
     title,
@@ -258,10 +258,7 @@ export function parseSongPageHtml(
   };
 }
 
-export function parseAutocompleteJson(
-  data: unknown,
-  baseUrl: string,
-): AutocompleteItem[] {
+export function parseAutocompleteJson(data: unknown, baseUrl: string): AutocompleteItem[] {
   if (!Array.isArray(data)) return [];
 
   return (data as RawAutocompleteItem[]).map((item) => ({

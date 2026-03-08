@@ -18,7 +18,9 @@ export class MasstamilanController {
   }
 
   listMovies = async (req: Request, res: Response): Promise<void> => {
-    const data: MovieListData = await this.service.listMovies(req.query as unknown as MovieListQuery);
+    const data: MovieListData = await this.service.listMovies(
+      req.query as unknown as MovieListQuery,
+    );
     res.json({ success: true, data });
   };
 
@@ -47,7 +49,9 @@ export class MasstamilanController {
   };
 
   resolveDownload = async (req: Request, res: Response): Promise<void> => {
-    const data: ResolveDownloadResult = await this.service.resolveDownload(String(req.query['path']));
+    const data: ResolveDownloadResult = await this.service.resolveDownload(
+      String(req.query['path']),
+    );
     res.json({ success: true, data });
   };
 }

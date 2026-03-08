@@ -20,6 +20,8 @@ export async function listLatestMovies(page = 1): Promise<MovieListData> {
 }
 
 export async function getMovieSongs(slug: string): Promise<SongsData> {
-  const data = await fetchJson<ApiEnvelope<SongsData>>(`/api/v1/movies/${encodeURIComponent(slug)}/songs`);
+  const data = await fetchJson<ApiEnvelope<SongsData>>(
+    `/api/v1/movies/${encodeURIComponent(slug)}/songs`,
+  );
   return data.data;
 }
