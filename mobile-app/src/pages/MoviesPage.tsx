@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Play, Loader2 } from "lucide-react";
@@ -17,6 +17,7 @@ const MoviesPage = () => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -40,14 +41,18 @@ const MoviesPage = () => {
     load();
   }, []);
 
-  const loadMore = async () => {
+  const loadMore = useCallback(async () => {
     if (loadingMore || !hasMore) return;
     setLoadingMore(true);
     try {
       const nextPage = page + 1;
       const data = await listMovies('latest-updates', nextPage);
       if (data.items.length > 0) {
-        setMovies(prev => [...prev, ...data.items]);
+        setMovies(prev => {
+          const bySlug = new Map(prev.map(item => [item.slug, item]));
+          data.items.forEach(item => bySlug.set(item.slug, item));
+          return Array.from(bySlug.values());
+        });
         setPage(nextPage);
         setHasMore(data.items.length >= 20);
       } else {
@@ -58,7 +63,24 @@ const MoviesPage = () => {
     } finally {
       setLoadingMore(false);
     }
-  };
+  }, [hasMore, loadingMore, page]);
+
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (entry?.isIntersecting) {
+          void loadMore();
+        }
+      },
+      { root: null, rootMargin: '200px 0px', threshold: 0.1 },
+    );
+
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [loadMore]);
 
   return (
     <div className="relative pb-40 min-h-screen overflow-y-auto scrollbar-hide">
@@ -69,8 +91,8 @@ const MoviesPage = () => {
         className="relative z-10 px-5 pt-6 max-w-lg mx-auto"
       >
         <motion.div variants={fadeItem}>
-          <h1 className="text-[26px] font-bold font-display tracking-tight text-foreground">Movies</h1>
-          <p className="text-[12px] text-muted-foreground mt-1 font-normal">Browse by film</p>
+          <h1 className="text-[30px] font-bold font-display tracking-tight text-foreground">Movies</h1>
+          <p className="text-[14px] text-muted-foreground mt-1 font-normal">Browse by film</p>
         </motion.div>
 
         {loading ? (
@@ -93,27 +115,23 @@ const MoviesPage = () => {
                     <img src={movie.imageUrl} alt={movie.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                     <div className="absolute bottom-0 left-0 right-0 p-3">
-                      {movie.year && <p className="text-[10px] text-foreground/40 font-medium tabular-nums">{movie.year}</p>}
-                      <p className="text-[15px] font-bold text-foreground font-display truncate mt-0.5 tracking-tight">{movie.title}</p>
+                      {movie.year && <p className="text-[12px] text-foreground/40 font-medium tabular-nums">{movie.year}</p>}
+                      <p className="text-[17px] font-bold text-foreground font-display truncate mt-0.5 tracking-tight">{movie.title}</p>
                     </div>
                     <div className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                       <Play size={13} fill="currentColor" className="text-white ml-px" />
                     </div>
                   </div>
-                  {movie.songCount && <p className="text-[11px] text-muted-foreground mt-1.5 ml-0.5 font-normal">{movie.songCount} songs</p>}
+                  {movie.songCount && <p className="text-[13px] text-muted-foreground mt-1.5 ml-0.5 font-normal">{movie.songCount} songs</p>}
                 </motion.div>
               ))}
             </div>
 
             {hasMore && (
-              <button
-                onClick={loadMore}
-                disabled={loadingMore}
-                className="w-full mt-6 py-3 rounded-full bg-foreground/6 text-[14px] font-semibold text-foreground/60 active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-              >
+              <div ref={loadMoreRef} className="w-full mt-6 py-4 flex items-center justify-center gap-2 text-[14px] text-muted-foreground">
                 {loadingMore && <Loader2 size={16} className="animate-spin" />}
-                {loadingMore ? 'Loading...' : 'Load More'}
-              </button>
+                {loadingMore ? 'Loading more movies...' : 'Scroll for more'}
+              </div>
             )}
           </>
         )}
