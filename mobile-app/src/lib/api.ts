@@ -15,7 +15,7 @@ class ApiError extends Error {
   }
 }
 
-const REQUEST_TIMEOUT_MS = 5000;
+const REQUEST_TIMEOUT_MS = 15000;
 const API_BASE_STORAGE_KEY = 'mt_api_base_url';
 const MOVIE_PREVIEW_CACHE_KEY = 'mt_movie_preview_cache_v1';
 let lastWorkingBase: string | null = null;
@@ -43,7 +43,10 @@ function getCandidateBases(): string[] {
 
   if (typeof window !== 'undefined') {
     try {
-      push(window.localStorage.getItem(API_BASE_STORAGE_KEY));
+      const storedBase = window.localStorage.getItem(API_BASE_STORAGE_KEY);
+      if (!import.meta.env.PROD || storedBase?.startsWith('https://')) {
+        push(storedBase);
+      }
     } catch {
       // ignore storage errors
     }
@@ -72,27 +75,33 @@ async function fetchJson<T>(path: string): Promise<T> {
   let lastError: Error | null = null;
 
   for (const base of bases) {
-    const url = `${base}${path}`;
-    try {
-      const res = await fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } });
-      if (!res.ok) {
-        const body = await res.text();
-        lastError = new ApiError(res.status, `API ${res.status}: ${body}`);
-        continue;
-      }
+    const attempts = import.meta.env.PROD && base === API_BASE_URL ? 2 : 1;
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+      const url = `${base}${path}`;
+      try {
+        const res = await fetchWithTimeout(url, { headers: { 'Accept': 'application/json' } });
+        if (!res.ok) {
+          const body = await res.text();
+          lastError = new ApiError(res.status, `API ${res.status}: ${body}`);
+          continue;
+        }
 
-      lastWorkingBase = base;
-      if (typeof window !== 'undefined') {
-        try {
-          window.localStorage.setItem(API_BASE_STORAGE_KEY, base);
-        } catch {
-          // ignore storage errors
+        lastWorkingBase = base;
+        if (typeof window !== 'undefined') {
+          try {
+            window.localStorage.setItem(API_BASE_STORAGE_KEY, base);
+          } catch {
+            // ignore storage errors
+          }
+        }
+
+        return (await res.json()) as T;
+      } catch (err) {
+        lastError = err as Error;
+        if (attempt < attempts - 1) {
+          await sleep(1500);
         }
       }
-
-      return (await res.json()) as T;
-    } catch (err) {
-      lastError = err as Error;
     }
   }
 
